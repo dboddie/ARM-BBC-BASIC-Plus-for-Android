@@ -1,0 +1,36 @@
+        IMPORT CGenerateError
+        EXPORT GenerateError
+
+PrintRegs
+        stmfd sp!,{r0,lr}
+        bl getCLayer
+        str r1,[r0,#4]
+        str r2,[r0,#8]
+        bl CPrintRegs
+        ldmfd sp!,{r0,lr}
+        mov pc,lr
+
+GetEnv
+        stmfd sp!,{lr}
+        bl getCLayer
+        bl CGetEnv
+        ldr r1,[r0,#4]
+        ldr r2,[r0,#8]
+        ldr r0,[r0]
+        ldmfd sp!,{lr}
+        mov pc,lr
+
+GenerateError
+        stmfd sp!,{r0,lr}
+        bl getCLayer        ; pass r0 implicitly to clayer.r[0]
+        bl CGenerateError
+        ldmfd sp!,{r0,lr}
+        mov pc,lr
+
+Exit
+        stmfd sp!,{r0,lr}
+        bl CExit
+        ldmfd sp!,{r0,lr}
+        mov pc,lr
+
+        LNK     fp
