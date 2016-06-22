@@ -954,4 +954,4 @@ PI      LDFD    FACC,FULLPI
  ]
         MOVS    TYPE,#TFP
         MOV     PC,R14
-        LNK     s.Fp2
+        LNK     fp2

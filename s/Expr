@@ -1260,4 +1260,4 @@ CHANNL  STR     R14,[SP,#-4]!
         BL      INTEGZ
         MOV     R1,IACC                ;right reg for most swi's
         LDR     PC,[SP],#4
-        LNK     s.Factor
+        LNK     Factor

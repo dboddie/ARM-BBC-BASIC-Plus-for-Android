@@ -2130,4 +2130,4 @@ CHKFPREG1
         BHI     ERASS3
         LDR     PC,[SP],#4
 
-        LNK     s.Lexical
+        LNK     Lexical

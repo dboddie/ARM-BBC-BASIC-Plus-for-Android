@@ -217,4 +217,4 @@ EXTMSGB LDRB    R2,[R4],#1
         BNE     EXTMSGB
         B       MSGERR
 
-        LNK s.Command
+        LNK Command

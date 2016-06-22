@@ -762,4 +762,4 @@ RETRP1  LDRB    R8,[SP],#1
 RETRPN  MOV     R7,#13
         STRB    R7,[R6]
         MOV     PC,R14
-        LNK     s.Stmt
+        LNK     Stmt

@@ -1159,4 +1159,4 @@ OSFILEINFOSTRACC
 OSFILEINFO
         MOV     R0,#5
         B       OSFILERETURN
-        LNK     s.ErrorMsgs
+        LNK     ErrorMsgs

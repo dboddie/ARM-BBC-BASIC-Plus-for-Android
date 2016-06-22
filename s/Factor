@@ -1504,4 +1504,4 @@ EOF     STR     R14,[SP,#-4]!
         ANDS    IACC,R1,#255
         MVNNE   IACC,#0
         B       PSINSTK
-        LNK     s.Funct
+        LNK     Funct

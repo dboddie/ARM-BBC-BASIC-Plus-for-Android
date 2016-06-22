@@ -2157,7 +2157,7 @@ QUIT    BL      SPACES
         BL      EXPRDN
         LDR     R1,ABEX
         MOV     R2,IACC
-        ; Store the return code and magic flags for OSQUITR in 's.Basic'
+        ; Store the return code and magic flags for OSQUITR in 'Basic'
         STR     R1,[ARGP,#OS_Exit_ABEX]
         STR     R2,[ARGP,#OS_Exit_RetCode]
         SWI     EXIT
@@ -2564,4 +2564,4 @@ ROPSTX  MOV     R1,#13
         MOVEQ   R1,#0                  ; JGH: If $$, use &00 terminator
         STRB    R1,[R4],#1
         MOV     PC,R14
-        LNK     s.Array
+        LNK     Array

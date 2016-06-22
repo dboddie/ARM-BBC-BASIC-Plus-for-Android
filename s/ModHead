@@ -352,7 +352,7 @@ Service_UKStatus                *       &29
 PaletteV                        *       &23
 paletteV_Set                    *       2
 
-;        AREA    |BASIC$$Code|, CODE, READONLY, PIC
+        AREA    |BASIC$$Code|, CODE, READONLY, PIC
 
 Module_BaseAddr                 *       .
 
@@ -463,4 +463,4 @@ Basic_ServicesBody
         BHS     MOVEMEMORY             ;claim service - it's in us
         MOV     PC,R14
 
-        LNK     s.BASIC
+        LNK     Basic

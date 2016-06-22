@@ -1741,4 +1741,4 @@ ENDWHR  BL      AEEXPR                 ; JGH: Step past expression/variable by e
         SUB     LINE,AELINE,#1
         B       DONXTS                 ; JGH: Fetch character and continue
 
-        LNK     s.Stmt2
+        LNK     Stmt2

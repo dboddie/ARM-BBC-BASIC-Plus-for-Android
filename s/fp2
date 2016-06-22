@@ -1005,4 +1005,4 @@ FRDEXM  STR     R14,[SP,#-4]!
         RSB     R6,R6,#0
         LDR     PC,[SP],#4
  ]
-        LNK     s.Expr
+        LNK     Expr

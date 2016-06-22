@@ -20,4 +20,4 @@
 
 FP                              *       0                      ;1 for ARM FP instruction set
 
-        LNK     s.ModHead
+        LNK     ModHead
