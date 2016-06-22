@@ -1,5 +1,3 @@
-        IMPORT CGenerateError
-        EXPORT GenerateError
 
 PrintRegs
         stmfd sp!,{r0,lr}
@@ -10,7 +8,7 @@ PrintRegs
         ldmfd sp!,{r0,lr}
         mov pc,lr
 
-GetEnv
+OSGetEnv
         stmfd sp!,{lr}
         bl getCLayer
         bl CGetEnv
@@ -20,17 +18,43 @@ GetEnv
         ldmfd sp!,{lr}
         mov pc,lr
 
-GenerateError
+OSGenerateError
         stmfd sp!,{r0,lr}
         bl getCLayer        ; pass r0 implicitly to clayer.r[0]
         bl CGenerateError
         ldmfd sp!,{r0,lr}
         mov pc,lr
 
-Exit
+OSExit
         stmfd sp!,{r0,lr}
         bl CExit
         ldmfd sp!,{r0,lr}
         mov pc,lr
+
+OSSynchroniseCodeAreas
+        mov pc,lr
+
+OSClose
+        stmfd sp!,{lr}
+        bl CClose
+        ldmfd sp!,{lr}
+        mov pc,lr
+
+OSChangeEnvironment
+        stmfd sp!,{lr}
+        bl CChangeEnvironment
+        ldr r1,[r0,#4]          ; r0 is now a pointer to the register block
+        ldr r2,[r0,#8]
+        ldr r3,[r0,#12]
+        ldr r0,[r0]
+        ldmfd sp!,{lr}
+        mov pc,lr
+
+QuickExit
+        ; syscall exit(int status)
+        mov r0, #1     ; status
+        mov r7, #1     ; syscall #1 (exit)
+        swi #0         ; invoke syscall
+
 
         LNK     fp

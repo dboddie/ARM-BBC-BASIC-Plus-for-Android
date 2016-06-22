@@ -210,15 +210,15 @@ MODULEMAIN
  |
         TEQP    PC,#0
  ]
-        bl GetEnv
+        bl OSGetEnv
         ;SWI     GETENV
         SUB     R1,R1,#VARS
         SUBS    R1,R1,#FREE+256
         BPL     MAIN
         ADR     R0,SEVEREERROR
-        bl GenerateError
+        bl OSGenerateError
         ;SWI     GENERATEERROR
-        bl Exit
+        bl OSExit
         ;SWI     EXIT
 SEVEREERROR
         &       11
@@ -326,19 +326,24 @@ PUTBACKHAND
         TEQ     R1,#0
         MOV     R0,#0
         STR     R0,[R12,#TRACEFILE-OLDERR] ;kill handle!
-        SWINE   OPEN+&20000            ;XOSCLOSE
+        blne OSClose
+        ;SWINE   OPEN+&20000            ;XOSCLOSE
         MOV     R0,#6
         LDMIA   R12!,{R1,R2,R3}
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         MOV     R0,#9
         LDMIA   R12!,{R1,R2}
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         MOV     R0,#11
         LDMIA   R12!,{R1,R2}
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         MOV     R0,#16
         LDMIA   R12!,{R1,R2}
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         LDMFD   SP!,{R0-R3,PC}
 
         GBLL    ONLYEMPTY
@@ -481,18 +486,15 @@ OSQUITR LDR     R1,[R12,#TRACEFILE-OLDERR] ;tracefile handle
         ASSERT  OS_Exit_ABEX = OLDERR + 9*4
         LDMIA   R12!,{R1,R2}
         ADR     R0,EXITERR
-        bl Exit
+        bl OSExit
         SWI     EXIT
 MYNAME  =       "ARW!"
 EXITERR DCD     1
         DCB     "BASIC program exceeded return code limit",0
         ALIGN
-MAIN    
-        ; syscall exit(int status)
-        mov r0, #0     ; status = 0
-        mov r7, #1     ; syscall #1 (exit)
-        swi #0         ; invoke syscall
+MAIN
         MOV     ARGP,#VARS
+ [ SY=1
         ;Create the SWI 0              ;MOV PC, R14 in the SWICODE data area
         ;and    then do a SYNCHRONISECODEAREAS, ranged.
         MOV     R0, #&EF000000         ;SWI 0
@@ -502,6 +504,7 @@ MAIN
         ADD     R2, R1, #8             ;Size of SWICODE area
         MOV     R0, #1
         SWI     XOSSYNCHRONISECODEAREAS
+ ]
  [ FP=1
         MOV     R0,#&70000
         WFS     R0
@@ -511,26 +514,32 @@ MAIN
         ADR     R1,OSERRR
         MOV     R2,#0
         ADD     R3,ARGP,#STRACC
-        SWI     OSCHANGEENV
+        bl QuickExit
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2,R3}
         MOV     R0,#9
         ADR     R1,OSESCR
         MOV     R2,#0
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2}
         MOV     R0,#11
         ADR     R1,OSQUITR
         ADD     R2,ARGP,#OLDERR
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2}
         MOV     R0,#16
         ADR     R1,OSUPCR
         ADD     R2,ARGP,#OLDERR
-        SWI     OSCHANGEENV
+        bl OSChangeEnvironment
+        ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2}
         ADD     R0,ARGP,#FREE          ;lomem
         STR     R0,[ARGP,#PAGE]
-        SWI     GETENV
+        bl OSGetEnv
+        ;SWI     GETENV
         MOV     SP,R1                  ;get himem limit
         STR     SP,[ARGP,#HIMEM]
         STR     SP,[ARGP,#MEMLIMIT]
@@ -572,7 +581,8 @@ ENTRYL  LDRB    R1,[R0],#1
         STMFD   SP!,{R0-R9}
         STR     SP,[ARGP,#ERRSTK]
 ;see if there's a name waiting to be read in
-        SWI     GETENV
+        bl OSGetEnv
+        ;SWI     GETENV
         ADD     R3,ARGP,#CALLEDNAME
 ENTRE1  LDRB    R2,[R0],#1
         STRB    R2,[R3],#1
