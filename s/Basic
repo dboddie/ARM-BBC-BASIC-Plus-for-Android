@@ -200,6 +200,7 @@ FREE                            #       0                      ;start of everyth
 CFLAG                           *       &20000000
 SAFECRUNCH                      *       15
 
+        EXPORT MODULEMAIN
 MODULEMAIN
 
  [ DO32BIT = 1
@@ -209,6 +210,11 @@ MODULEMAIN
  |
         TEQP    PC,#0
  ]
+        ; syscall exit(int status)
+        mov r0, #0     ; status = 0
+        mov r7, #1     ; syscall #1 (exit)
+        swi #0         ; invoke syscall
+
         SWI     GETENV
         SUB     R1,R1,#VARS
         SUBS    R1,R1,#FREE+256
