@@ -20,5 +20,5 @@ cd s
 $ASASM -From BASIC105 $OBJDIR/basic.elf
 cd ..
 
-arm-linux-androideabi-gcc -c -o $OBJDIR/main.o c/main.c --sysroot=$SYSROOT
+arm-linux-androideabi-gcc -std=c99 -c -o $OBJDIR/main.o c/main.c --sysroot=$SYSROOT
 arm-linux-androideabi-gcc -o basic $OBJDIR/main.o $OBJDIR/basic.elf --sysroot=$SYSROOT

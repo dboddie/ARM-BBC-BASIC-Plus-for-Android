@@ -210,18 +210,16 @@ MODULEMAIN
  |
         TEQP    PC,#0
  ]
-        ; syscall exit(int status)
-        mov r0, #0     ; status = 0
-        mov r7, #1     ; syscall #1 (exit)
-        swi #0         ; invoke syscall
-
-        SWI     GETENV
+        bl GetEnv
+        ;SWI     GETENV
         SUB     R1,R1,#VARS
         SUBS    R1,R1,#FREE+256
         BPL     MAIN
         ADR     R0,SEVEREERROR
-        SWI     GENERATEERROR
-        SWI     EXIT
+        bl GenerateError
+        ;SWI     GENERATEERROR
+        bl Exit
+        ;SWI     EXIT
 SEVEREERROR
         &       11
         =       "Not enough application memory to start $Name.",0
@@ -483,12 +481,18 @@ OSQUITR LDR     R1,[R12,#TRACEFILE-OLDERR] ;tracefile handle
         ASSERT  OS_Exit_ABEX = OLDERR + 9*4
         LDMIA   R12!,{R1,R2}
         ADR     R0,EXITERR
+        bl Exit
         SWI     EXIT
 MYNAME  =       "ARW!"
 EXITERR DCD     1
         DCB     "BASIC program exceeded return code limit",0
         ALIGN
-MAIN    MOV     ARGP,#VARS
+MAIN    
+        ; syscall exit(int status)
+        mov r0, #0     ; status = 0
+        mov r7, #1     ; syscall #1 (exit)
+        swi #0         ; invoke syscall
+        MOV     ARGP,#VARS
         ;Create the SWI 0              ;MOV PC, R14 in the SWICODE data area
         ;and    then do a SYNCHRONISECODEAREAS, ranged.
         MOV     R0, #&EF000000         ;SWI 0
@@ -1977,4 +1981,4 @@ TTWINO                          #       1
 TINSTALL                        #       1
 TTWOCOMMLIMIT                   #       0
 
-        LNK     fp
+        LNK SWILayer
