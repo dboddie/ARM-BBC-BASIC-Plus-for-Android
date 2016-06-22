@@ -1,0 +1,618 @@
+           BBC BASIC for Windows features added to ARM BBC BASIC
+           =====================================================
+            This manual details the additions to ARM BBC BASIC
+
+The file BASICPlus is a relocatable module, and the files KillBTrans and
+UnkillBAS are Obey files. In the binaries archive they are in the rm
+directory. If they are not filetyped they should be filetyped with
+
+  *SetType BASICPlus Module
+  *SetType KillBTrans Obey
+  *SetType UnkillBAS Obey
+
+If using an emulator on a non-filetyping system such as Windows, Linux, etc,
+you can manually set the filetypes outside the emulator by adding the
+filetype suffixes as BASICPlus,ffa KillBTrans,feb and UnkillBAS,feb.
+
+As the ROM-based BASICTrans module does not have some of the error messages
+required by BASICPlus it must be killed so that the default messages are
+used instead. This can be done with *RmKill BASICTrans or by running the
+KillBTrans file.
+
+Running the UnkillBAS file will disable BASICPlus and re-instate the ROM
+BASIC.
+
+
+
+                          Additional Manual Entries
+                          -------------------------
+
+Accessing memory locations
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The '$$' and    Strings can be placed directly in memory, each character's
+'$' indirection ASCII code being stored in one byte of memory. For example:
+operators
+                DIM pointer% 100
+                $pointer%="STRING"
+                PRINT $pointer%
+
+                The $ indirection operator places a carriage return (ASCII
+                13) after the last character of the string. Thus, the
+                example above uses seven bytes: six for the characters of
+                the string and one for the carriage return.
+
+                The $$ indirection operators places a null (ASCII 0) after
+                the last character of the string. Thus, in the above
+                example, pointer%?6 contains 13, in the following example:
+
+                $$pointer%="STRING"
+
+                pointer%?6 would contain 0.
+
+                To see this, run the following program:
+
+                   10 DIM ret% 10, nul% 10
+                   20 REM Set all bytes to &FF
+                   30 FOR N%=0 TO 10
+                   40   ret%?N%=&FF:nul%?N%=&FF
+                   50 NEXT N%
+
+                   60 REM Store the string
+                   70 $ret%="STRING"
+                   80 $$nul%="STRING"
+                   90 REM Print out the bytes
+                  100 FOR N%=0 TO 10
+                  110   PRINT ret%?N%;"  ";nul%?N%
+                  120 NEXT N%
+
+                As with |, there is no dyadic form of $ or $$. For example,
+                although you may use $(string%+1), the form string$1 is not
+                allowed.
+
+The '^'         You can discover the memory address at which a variable is
+address-of      stored using the 'address of' function ^.  Once you know its
+function        address you can access the value of a variable by means of
+                the appropriate indirection operator:
+
+                A% = 1234
+                PRINT !^A%
+                B = 4.5
+                PRINT |^B
+
+                This will work for all types of variable (integer,
+                floating-point, string, array etc.) and PROCs and FNs.
+
+                The address returned is always that of the item's data
+                block. In the case of integers and reals, this holds the
+                variable's actual value.
+
+                In the case of a normal string variable this is is not that
+                of the first character of the string, but that of the string
+                descriptor. Therefore the address the string itself is
+                !^string$.
+
+                In the case of an array the address returned by ^array() is
+                that of a pointer to the array parameter block, therefore
+                the address of the parameter block is !^array(). To obtain
+                the address of the array data you should specify the name of
+                the first element, e.g. ^array(0).
+
+                In the case of PROCs and FNs, the returned address is that
+                of the stored FN/PROC descriptor. Knowing the address of a
+                FN or PROC allows it to be called indirectly, for example:
+
+                DIM pr%(3)
+                pr%()=^PROCzero, ^PROCone, ^PROCtwo, ^PROCthree
+                REPEAT
+                  PROC(pr%(GET AND 3))
+                UNTIL FALSE
+
+                DEFPROCzero:PRINT "zero":ENDPROC
+                DEFPROCone:PRINT "one":ENDPROC
+                DEFPROCtwo:PRINT "two":ENDPROC
+                DEFPROCthree:PRINT "three":ENDPROC
+
+                If the function/procedure has parameters, you must append ()
+                to the name, for example pr%=^PROClookup().
+
+----------------------------------------------------------------------------
+Keywords: Numerical
+~~~~~~~~~~~~~~~~~~~
+
+DIV                                                                      DIV
+
+                Integer division (no remainder)
+
+Syntax          operand DIV operand
+                numvar DIV= operand
+
+Operands        Integer range numerics. Reals are converted to integers
+                before the divide operation is carried out. The righthand
+                side must not evaluate to zero.
+
+Result          The (integer) quotient is always rounded towards zero. If
+                the signs of the operands are the same, the quotient is
+                positive, otherwise it is negative. The remainder is found
+                using MOD.
+
+Examples        PRINT (first-last) DIV 10
+                a%=space% DIV &100
+                result DIV= 20
+
+----------------------------------------------------------------------------
+
+MOD                                                                      MOD
+
+                Operator giving the interger remainder of its operands, is
+                gives the remainder of the division. Function giving the
+                modulus of its array argument.
+
+Syntax (1)      operand MOD operand
+                numvar MOD= operand
+
+Operands        Integer range numerics. Reals are converted to integers
+                before the operation is carried out. The righthand side must
+                not evaluate to zero.
+
+Result          Remainder when the lefthand operand is divided by the
+                righthand one using integer division. The sign of the result
+                is the same as the sign of the lefthand operand.
+
+Syntax (2)      MOD numeric_array
+
+Arguments       The numeric_array can be any integer or floating point
+                array.
+
+Result          The square root of the sum of the squares (the modulus) of
+                all the elements of the array.
+
+Examples        INPUT i%: i% MOD= max_num%
+                count%=count% MOD max% + 1
+                PRINT result% MOD 100
+                DEFFNrms(a())=MODa()/SQRDIM(a(),1)
+
+----------------------------------------------------------------------------
+Keywords: Logical
+~~~~~~~~~~~~~~~~~
+
+AND                                                                      AND
+
+                Operator giving logical or bitwise AND.
+
+Syntax          operand AND operand
+                numvar AND= operand
+
+Operands        Relational expressions, or bit values to be ANDed.
+
+Result          The bitwise AND of the operands. Corresponding bits in the
+                integer operators are ANDed to produce the result. Hence a
+                bit in the result is one if both of the corresponding bits
+                of the operands are one. Otherwise it is zero.
+
+                If used to combine relational values, AND's operands should
+                be either TRUE (-1) or FALSE (0). Otherwise, unexpected
+                results may occur. For example, 2 and 4 are both true
+                (non-zero), but 2 AND 4 yields FALSE (zero).
+
+Examples        a = x AND y      :REM a is set to binary AND of x and y
+                status AND= mask :REM Keep bits in status set by mask
+                PRINT var AND 3  :REM print lowest two bits of var
+                IF day=7 AND month$="march" THEN PRINT "Happy birthday"
+                IF temp>50 AND NOT windy THEN PROCgo_out ELSE PROCstay_in
+                MOUSE x,y,b:sel=b AND 4:menu=b AND 2:adj=b AND 1
+
+----------------------------------------------------------------------------
+
+EOR                                                                      EOR
+
+                Operator giving logical or bitwise exclusive-OR.
+
+Syntax          operand EOR operand
+                numvar EOR= operand
+
+Operands        Relational expressions, or bit values to be exclusive-ORed.
+
+Result          The logical bitwise exclusive-OR of the operands.
+                Corresponding bits in the integer operators are ex-ORed to
+                produce the result. Hence each bit in the result is zero if
+                the corresponding bits in the operands are equal, and
+                otherwise one.
+
+Examples        PRINT height>10 EOR weight<20
+                bits = mask EOR value1
+                toggle EOR= 1
+
+----------------------------------------------------------------------------
+
+OR                                                                        OR
+
+                Operator giving logical or bitwise OR.
+
+Syntax          operand OR operand
+                numvar OR= operand
+
+Operands        Relational expressions, or bit values to be ORed.
+
+Result          An integer obtained by ORing together the corresponding bits
+                in the operands. The operands may be interpreted as
+                bit-patterns, in which case a bit in the result is set to
+                one if either or both of the corresponding bits in the
+                operand are one. Alternatively, they may be interpreted as
+                logical values, in which case the result is TRUE if eisther
+                or both of the operands is TRUE.
+
+Examples        PRINT a% OR &AA55
+                b% OR= &80
+                IF a<1 OR a>10 THEN PRINT "Bad range"
+
+----------------------------------------------------------------------------
+Keywords: Program statements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DIM                                                                      DIM
+
+----------------------------------------------------------------------------
+
+FN                                                                        FN
+
+                Word introducing a user-defined function.
+
+Syntax (1)      DEF FNproc_part
+       (2)      FNproc_part
+       (3)      FN(numeric)
+
+Argument (1)    For the format of the proc-part, see DEF. It gives the names
+                and types of the parameters of the function, if any. For
+                example:
+
+                1000 DEF FNmin(a%,b%):IF a%<b% THEN =a% ELSE =b%
+
+                a% and b% are the formal parameters. They stand for the
+                expressions passed to the function (the actual parameters)
+                when FNmin is called. The result of a user-defined function
+                is given by a statement starting with =. As the example
+                above shows, there may be more than one = in a function. The
+                first one which is encountered during execution terminates
+                the function.
+
+                    Note: User-defined functions may span several program
+                    line, and contain all the normal BASIC statements, for
+                    example FOR loops, IF statements, and so on. They may
+                    also declare local variables using the LOCAL keyword.
+
+Argument (2)    proc-part is an identifier followed by a list of expressions
+                (or array or RETURN variables) corresponding to the formal
+                parameters in the DEF statement for the function. The result
+                depends on the assignment that terminated the function, and
+                so can be of any type and range. An example function call
+                is:
+
+                PRINT FNmin(2*bananas%, 3*apples%+1)
+
+Argument (3)    FN(numeric) causes the function pointed to by the specified
+                value to be called indirectly. The value passed is normally
+                an address found with the ^ function, for example:
+
+                f%=^FNmin()
+                ...
+                state%=FN(f%)(current%, lowest%)
+
+                The above code calls the function FNmin() but the name of
+                the function is specified separately from the call itself.
+                This allows you to do things such as determine which
+                procedure or function should be called at run time. For
+                example you could have an array of function pointers and
+                select the wanted one according to an index value:
+
+                DIM fptr%(3)
+                fptr%() = ^FNzero, ^FNone, ^FNtwo, ^FNthree
+                REM ....
+                answer = FN(fptr%(index%))
+
+Examples        DEFFNfact(n%):IF n%<1 THEN =1 ELSE =n%*FNfact(n%-1)
+                DEFFNh0(A%,N%)=RIGHT$("0000000"+STR$~A%,N%)
+                REPEAT PRINT FNh0(GET,4):UNTIL FALSE
+
+----------------------------------------------------------------------------
+
+PRIVATE                                                              PRIVATE
+
+----------------------------------------------------------------------------
+
+PROC                                                                    PROC
+
+                Statement introducing or calling a user-defined procedure.
+
+Syntax (1)      DEF PROCproc_part
+       (2)      PROCproc_part
+       (3)      PROC(numeric)
+       (4)      ON expression PROCproc1 [,PROCproc2...] [ELSE statement]
+
+Argument (1)    proc-part has the form identifier[(parameter-list)]. It
+                gives the name of the procedure (the identifier) and the
+                names and types of the optional parameters, which must be
+                enclosed in brackets and seperated by commas.
+
+Argument (2)    The second form is used when the procedure is actually
+                called, and this time the parameter list comprises
+                expressions of types corresponding to the parameters
+                declared in the DEF PROC statement. The expressions are
+                evaluated and assigned (locally) to the parameters
+                variables. Control returns to the calling program when an
+                ENDPROC is executed.
+
+Argument (3)    PROC(numeric) causes the procedure pointed to by the
+                specified value to be called indirectly. The value passed is
+                normally an address found with the ^ function, for example:
+
+                p%=^PROCticker
+                ...
+                PROC(p%)
+
+                The above code calls the procedure PROCticker but the name
+                of the procedure is specified separately from the call
+                itself. This allows you to do things such as determine which
+                procedure or function should be called at run time. For
+                example you could have an array of procedure pointers and
+                select the wanted one according to an index value:
+
+                DIM pptr%(2)
+                pptr%() = ^PROCminus(), ^PROCzero(), ^PROCplus()
+                REM ....
+                PROC(pptr%(1+SGN(dx%)))(dy%)
+
+Argument (4)    expression should evaluate to an integer. If this integer is
+                n, then the nth procedure listed is called. If the integer
+                is less than 1 or greater than the number of procedure calls
+                given, the statement following the ELSE, if it is present,
+                is executed. The procedure calls can be named, direct, calls
+                or indirect calls.
+
+Examples        DEFPROCdelay(n):LOCAL T%:T%=TIME+n*100
+                REPEAT UNTIL TIME>T%:ENDPROC
+
+                IF ?flag=0 THEN REPEAT PROCdelay(0.1):UNTIL ?flag
+                ON INSTR("012",A$) PROC(pex%),PROCload(f$):PROCsave(f$)
+
+----------------------------------------------------------------------------
+Keywords: Input/Output
+~~~~~~~~~~~~~~~~~~~~~~
+
+GET                                                                      GET
+
+Syntax (1)      GET
+       (2)      GET(expression1, expression2)
+
+----------------------------------------------------------------------------
+
+GET$                                                                    GET$
+
+Syntax (1)      GET$
+       (2)      GET$#factor
+       (3)      GET$(expression1, expression2)
+
+----------------------------------------------------------------------------
+Keywords: Assembly language
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CALL                                                                    CALL
+
+                Statement to execute a machine code subroutine.
+
+Syntax          CALL expression [,variable...]
+
+Format of the   Type        BASIC       l-value points to
+CALL parameter  &00         ?factor     byte-aligned byte
+block           &04         !factor     byte-aligned word
+                &04         name%       word-aligned word
+                &04         name%(n)    word-aligned word
+                &05         |factor     byte-aligned FP value (5 bytes)
+                &05         factor      byte-aligned FP value (5 bytes)
+                &05         factor(n)   byte-aligned FP value (5 bytes)
+                &08         |factor     byte-aligned FP value (8 bytes)
+                &08         factor      byte-aligned FP value (8 bytes)
+                &08         factor(n)   byte-aligned FP value (8 bytes)
+                &80         name$       byte-align SIB (5 bytes)
+                &80         name$(n)    byte-align SIB (5 bytes)
+                &81         $factor     byte-aligned CR-terminated string
+                &82         $$factor    byte-aligned NULL-terminated string
+                &100+&04    name%()     word-aligned array pointer
+                &100+&05    name()      word-aligned array pointer
+                &100+&80    name$()     word-aligned array pointer
+
+----------------------------------------------------------------------------
+Keywords: Program Structures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+EXIT                                                                    EXIT
+
+                A statement which causes a premature exit from a FOR/NEXT,
+                REPEAT/UNTIL or WHILE/ENDWHILE loop.
+
+                EXIT is provided for ease of translating programs from other
+                BASIC dialects. In almost all cases the use of EXIT can be
+                avoided by rewriting the appropriate loop structure.
+
+Syntax          EXIT FOR
+                EXIT FOR <numvar>
+                EXIT REPEAT
+                EXIT WHILE
+
+Purpose         EXIT FOR causes execution to continue after the matching
+                NEXT statement, EXIT REPEAT causes execution to continue
+                after the matching UNTIL statement and EXIT WHILE causes
+                execution to continue after the matching ENDWHILE statement.
+                Typically you would use EXIT when a situation occurs which
+                necessitates leaving the loop 'part way through':
+
+                FOR I% = start% TO finish%
+                  ...
+                  IF test% THEN EXIT FOR
+                  ...
+                NEXT I%
+
+                REPEAT
+                  ...
+                  IF test% THEN EXIT REPEAT
+                  ...
+                UNTIL condition%
+
+                WHILE condition%
+                  ...
+                  IF test% THEN EXIT WHILE
+                  ...
+                ENDWHILE
+
+                In the case of EXIT FOR an optional loop variable can be
+                specified, causing execution to continue after the NEXT
+                statement which matches that variable:
+
+                FOR I% = start% TO finish%
+                  FOR J% = first% TO last%
+                    ...
+                    IF test% THEN EXIT FOR I%
+                    ...
+                  NEXT
+                NEXT
+                REM Execution continues here
+
+                You can EXIT from a loop even when inside a nested loop of a
+                different kind:
+
+                REPEAT
+                  FOR J% = first% TO last%
+                    ...
+                    IF test% THEN EXIT REPEAT
+                    ...
+                  NEXT
+                UNTIL FALSE
+                REM Execution continues here
+
+                EXIT is not compatible with the use of non-standard
+                FOR...NEXT constructs such as 'popping' an inner loop or
+                listing multiple loop variables after NEXT. When EXIT is
+                used, every FOR must have a matching NEXT.
+
+----------------------------------------------------------------------------
+Keywords: Graphics
+~~~~~~~~~~~~~~~~~~
+
+PLOT                                                                    PLOT
+
+                Statement performing an operating system PLOT function.
+
+Syntax          PLOT [expression1,]expression2,expression3
+
+Arguments       expression1 is the plot number in the range 0 to 255. For
+                example, 85 is the plot number for an absolute triangle plot
+                in the foreground colour. The second and third expressions
+                are the x and y coordinates respectively, in the range
+                -32768 to +32767. If expression1 is omitted, then PLOT 69 is
+                used to plot a single absolute point. See Appendix G for a
+                full list of PLOT codes.
+
+Examples        PLOT 85,100,100 :REM Draw a triangle
+                PLOT x,y        :REM plot a single point
+
+----------------------------------------------------------------------------
+
+WAIT                                                                    WAIT
+
+                Statement to wait for the end of the current display frames
+                or for a specified number of centiseconds. Waiting until the
+                end of the display frame maximises the amount of time
+                available in which to draw objects when the electron beam is
+                'blanked'.
+
+Syntax          WAIT [expression]
+
+Arguments       The expression is the number of centiseconds to wait. If no
+                expression is given, the current horizontal sync is waited
+                for, the same as using WAIT 0. Escape will terminate the
+                wait early. WAIT -1 will wait approximately 1.3 years.
+
+                Note that WAIT counts the number of horizontal sync pulses,
+                and assumes that the horizontal sync is exactly 50Hz. If it
+                is not, the delay will be different.
+
+Purpose         To enable a program to syncronise animation effects with the
+                scanning of the display hardware or to pause for a specified
+                period.
+
+Examples        MODE 0
+                a=0
+                REPEAT
+                  POINT 1279,500+200*SIN a
+                  a+=RAD5
+                  WAIT:RECTANGLE FILL 0,300,1279,400 TO -4,300
+                UNTIL FALSE
+
+                WAIT 100:REM Wait approximately 1 second
+
+---------------------------------------------------------------------------
+Array Operations
+~~~~~~~~~~~~~~~~
+
+
+
+
+
+
+Commands
+--------
+$$<num>=<str>                  DONE: null-terminated string indirection
+PROC(<num>)[(parameter list)]  DONE: Call a procedure indirectly
+WAIT <num>                     DONE: Wait for centisecond period
+\                              DONE: Skip to next line
+PLOT <num>,<num>               DONE: Do PLOT 69,<num>,<num>
+EXIT WHILE                     DONE: Exit current WHILE loop
+EXIT REPEAT                    DONE: Exit current REPEAT loop
+EXIT FOR                       DONE: Exit current FOR loop
+EXIT FOR <var>                       Exit specified FOR loop
+PROCname(PROCname|FNname)            Pass a procedure/function to a procedure
+DIM struct{<members>}                Define a structure
+DIM struct{}=struct{}                Define with a prototype
+PRIVATE struct[,struct...]           Declare structures local to function or procedure
+PRIVATE var[,var...]                 Declare variables local to function or procedure
+RECTANGLE SWAP <num>,<num>,<num>[,<num>] TO <num>,<num>
+name.name=                           Assign structure member
+
+Functions
+---------
+$$<num>                        DONE: null-terminated string indirection
+^<identifier>                  DONE: Address of identifier
+FN(<num>)[(parameter list)]    DONE: Call a function indirectly
+FNname(PROCname|FNname)              Pass a procedure/function to a procedure
+DIM(struct{})                        Return size of structure
+name.name                            Read structure member value
+GET$(<num>,<num>)                    Read a character from the specified character position
+GET(<num>,<num>)                     Read a character from the specified character position
+&o                                   Octal number
+GET(<num>)                           Read a value from the specified I/O port
+STR$#<num>                           Return string representation in octal
+STR$/<num>                           Return string representation in binary
+
+Compound Operators - <val> <op>= <val>
+--------------------------------------
+AND=           DONE: Bitwise AND
+DIV=           DONE: Integer division
+EOR=           DONE: Bitwise exclusive-OR
+MOD=           DONE: Modulus
+OR=            DONE: Bitwise OR
+*=                   Multiplication
+/=                   Division
+
+Array operations
+----------------
+array() = array() AND array()
+array() = array() DIV array()
+array() = array() EOR array()
+array() = array() MOD array()
+array() = array() OR array()
+
+array() AND= <expr>
+array() DIV= <expr>
+array() EOR= <expr>
+array() MOD= <expr>
+array() OR = <expr>

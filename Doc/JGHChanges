@@ -1,0 +1,120 @@
+Changes to ARM BBC BASIC source code
+====================================
+15-Feb-2009:
+- EXIT WHILE/REPEAT/FOR working, EXIT FOR <var> not yet done.
+
+12-Feb-2009:
+- PLOY x,y does same as PLOT 69,x,y to plot single point
+- EXIT WHILE working, trying to generalise code to allow EXIT REPEAT|FOR
+  to use same code.
+
+09-Feb-2009:
+- Line continuation fully working
+
+06-Feb-2009:
+- Syntax checked for EXIT [FOR|REPEAT|WHILE]
+- Line continuation character working for expressions
+  Not fully working on PROC calls passing arrays
+
+01-Feb-2009:
+- ^PROCname() and ^FNname() enforced, to match BBFW syntax
+- WAIT<cr> bug fixed, WAIT 0 same as WAIT with no parameter
+
+29-Jan-2009:
+- FN/PROC lookup working as subroutine, ^PROCname and ^FNname works
+  Indirect PROC(<num>) and FN(<num>) also works allows, eg:
+    DIM pr%(3):pr%()=^PROCone, ^PROCtwo, ^PROCthree, ^PROCfour
+    REPEAT:PROC(pr%(GET AND 3)):UNTIL 0
+- WAIT <num> waits <num> ticks
+  Bug: WAIT<cr> causes Mistake on following line, AELINE/LINE not
+  updated correctly (Mohsen)
+
+26-Jan-2009:
+- AND=, OR=, EOR=, MOD=, DIV= done.
+
+24-Jan-2009:
+- FN/PROC lookup now a subroutine so ^ can call it
+  Causing stack corruption, so changes commented out
+- $$<address>=<str> - store nul-terminated string.
+- <str>=$$<address> - fetch nul-terminated string.
+
+18-Jan-2009:
+- Added ^ (address-of) function, <num>=^<var>
+  Returns the address of the data block of <var>
+  eg, fred%=6:PRINT !^fred% displays 6
+      jim$="hi":PRINT ~!^fred% displays address of start of "hi" string
+  Doesn't yet do ^PROCname and ^FNname
+
+13-Jan-2009:
+- Get source code assembling correctly:
+  Ensure all LNK commands are of the form LNK s.filename, not LNK filename.s
+  LookUpHelp turned off, OwnErrors turned on, my machine doesn't have enough BasicTrans messages
+  Change startup banner to VeRsIoN to be quickly identifiable
+
+- Add tokens for PRIVATE, EXIT:
+  Added dispatch address in command and function dispatch tables
+  Added tokens to tokeniser/detokeniser
+  Wrote stub code
+  NB: BASICTrans 1.00 falls over with extra tokens, must RMKill BASICTrans before running
+
+
+Things to add to ARM BBC BASIC, approximately in the order I'm tackling them in
+===============================================================================
+Commands
+--------
+$$<num>=<str>                  DONE: null-terminated string indirection
+PROC(<num>)[(parameter list)]  DONE: Call a procedure indirectly
+WAIT <num>                     DONE: Wait for centisecond period
+\                              DONE: Skip to next line
+PLOT <num>,<num>               DONE: Do PLOT 69,<num>,<num>
+EXIT WHILE                     DONE: Exit current WHILE loop
+EXIT REPEAT                    DONE: Exit current REPEAT loop
+EXIT FOR                       DONE: Exit current FOR loop
+EXIT FOR <var>                       Exit specified FOR loop
+PROCname(PROCname|FNname)            Pass a procedure/function to a procedure
+PRIVATE var[,var...]                 Declare variables local to function or procedure
+DIM struct{<members>}                Define a structure
+DIM struct{}=struct{}                Define with a prototype
+PRIVATE struct[,struct...]           Declare structures local to function or procedure
+name.name=                           Assign structure member
+RECTANGLE SWAP <num>,<num>,<num>[,<num>] TO <num>,<num>
+
+Functions
+---------
+$$<num>                        DONE: null-terminated string indirection
+^<identifier>                  DONE: Address of identifier
+FN(<num>)[(parameter list)]    DONE: Call a function indirectly
+FNname(PROCname|FNname)              Pass a procedure/function to a procedure
+DIM(struct{})                        Return size of structure
+name.name                            Read structure member value
+GET$(<num>,<num>)                    Read a character from the specified character position
+GET(<num>,<num>)                     Read a character from the specified character position
+Functions in PDP-11 BASIC:
+STR$/<num>                           Return string representation in binary
+STR$#<num>                           Return string representation in octal
+&o                                   Octal number
+GET(<num>)                           Read a value from the specified I/O port
+
+Compound Operators - <val> <op>= <val>
+--------------------------------------
+AND=           DONE: Bitwise AND
+DIV=           DONE: Integer division
+EOR=           DONE: Bitwise exclusive-OR
+MOD=           DONE: Modulus
+OR=            DONE: Bitwise OR
+*=                   Multiplication
+/=                   Division
+
+Array operations
+----------------
+array() = array() AND array()
+array() = array() DIV array()
+array() = array() EOR array()
+array() = array() MOD array()
+array() = array() OR array()
+
+array() AND= <expr>
+array() DIV= <expr>
+array() EOR= <expr>
+array() MOD= <expr>
+array() OR = <expr>

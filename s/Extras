@@ -1,0 +1,220 @@
+;> Extras - Extra code to extend BASIC
+;
+; CHANGES
+; 13-Jan-2009 JGH: Initial stub routines
+;    Token &C8,&A4 is MANDEL from original AB, new commands follow on
+; 18-Jan-2009 JGH: AddrOf finds address of a variable.
+;    Needs to be also able to do ^PROCname and ^FNname.
+; 26-Jan-2009 JGH: AND=, OR=, EOR=, DIV=, MOD=
+; 28-Jan-2009 JGH: Dummy code for DIM strut{...}
+; 29-Jan-2009 JGH: AddrOf FN/PROC works
+; 01-Feb-2009 JGH: AddrOf enforces following (), eg ^FNname(), ^PROCname() if needed
+; 06-Feb-2009 JGH: Initial syntax checking for EXIT
+; 07-Feb-2009 JGH: Line continuation as a statement, allows <stmt>:\ ... \<stmt>
+; 13-Feb-2009 JGH: EXIT WHILE works
+; 14-Feb-2009 JGH: EXIT REPEAT works, try to generalise EXIT code
+; 15-Feb-2009 JGH: EXIT REPEAT/WHILE/FOR uses same code
+
+
+; \ ... \ - Line continuation character as statement
+; ==================================================
+STMCONT MOV     AELINE,LINE            ; Point to character after '\'
+        BL      AELINECONT             ; Step past line continuation
+        MOV     LINE,AELINE
+        B       DISPAT                 ; And continue executing
+
+
+; ^<variable> - reads address of variable's data
+; ==============================================
+; Creates variable if not already in existance
+;
+ADDROF  STR     R14,[SP,#-4]!
+        MOV     LINE,AELINE
+        BL      SPACES             ; Skip spaces
+        CMP     R10,#TFN           ; FN token?
+        LDREQ   R1,[ARGP,#FNPTR]   ; Base to FNs in heap
+        BEQ     ADDRFN             ; Jump to look up FNname
+        CMP     R10,#TPROC         ; PROC token?
+        LDREQ   R1,[ARGP,#PROCPTR] ; Base to PROCs in heap
+        BEQ     ADDRFN             ; Jump to look up PROCname
+        SUB     LINE,LINE,#1       ; Point back to variable name
+        BL      CRAELV             ; Find variable, create if nonexistant
+        BEQ     FACERR             ; Invalid idenfier, eg ^<token>, ^<number>
+        MOVS    TYPE,#TINTEGER     ; IACC=>data block
+        LDR     PC,[SP],#4
+
+ADDRFN  MOV     R0,#0
+        MOV     AELINE,LINE
+        BL      FNLOOK
+        SUB     AELINE,AELINE,#1   ; Correct line pointer
+        LDR     TYPE,[IACC]        ; Does this definition have any paramters?
+        TEQ     TYPE,#0
+        BEQ     ADDRFN2            ; No, return this pointer
+        LDRB    R10,[AELINE]       ; Ensure following "()" exists
+        CMP     R10,#"("
+        BNE     ARGMAT             ; No opening '(', give error
+        ADD     AELINE,AELINE,#1
+        LDRB    R10,[AELINE],#1
+        CMP     R10,#")"
+        BNE     ERBRA              ; No closing ')', give error
+ADDRFN2 MOVS    TYPE,#TINTEGER     ; IACC=>data block
+        LDR     PC,[SP],#4
+
+
+; *= /= AND= EOR= DIV= MOD= OR=
+; =============================
+; Entered with R1=operator, destination on stack
+;
+MULTBC     ; not yet done, variable returned unchanged
+DIVIDEBC   ; not yet done, variable returned unchanged
+ANDBC
+EORBC
+DIVBC
+MODBC
+ORBC
+        STMFD   SP!,{R1}               ; Save operator
+        BL      EXPR                   ; Evaluate expression
+        BL      AEDONE
+        LDMFD   SP!,{R1}               ; Jiggle stack around
+        LDMFD   SP!,{R4,R5}
+        STMFD   SP!,{R1}               ; Put operator back on stack for later
+; R5=4, 5/8, 128, 129, 130, R4=dest
+; TYPE=0, &2x, &4x, &8x
+        TST     R5,#128                ; Check destination's type
+        BNE     ERTYPEINT              ; Must be a number
+        BL      INTEGY                 ; Ensure integer
+        MOV     R7,IACC
+        MOV     IACC,R4                ; R0=R4=dest
+        MOV     TYPE,R5                ; R9=R5=4, 5/8, 128+
+        BL      VARIND                 ; Get current value of dest
+; TYPE now = TINTEGER, TFP, (&4x, &8x, etc) IACC/FPACC=value
+; R5=4, 5/8
+; Need to ensure integer
+        BL      INTEGY
+        LDMFD   SP!,{R1}               ; Get operator back
+        TEQ     R1,#TDIV
+        BEQ     BCDIV
+        TEQ     R1,#TMOD
+        BEQ     BCMOD
+        TEQ     R1,#TAND
+        ANDEQ   IACC,IACC,R7
+        TEQ     R1,#TOR
+        ORREQ   IACC,IACC,R7
+        TEQ     R1,#TEOR
+        EOREQ   IACC,IACC,R7
+
+BCDONE
+; TYPE=&4x, integer result
+; R5=4, 5/8, type of dest
+; R4=dest
+        TEQ     R5,#TFPLV
+        BEQ     STBCFP
+        BL      STOREANINT
+        B       NXT
+STBCFP
+        BL      FLOATY                 ; Convert to float
+        MOV     TYPE,R4                ; TYPE=>dest
+        BL      F1STA                  ; Store fp value
+        B       NXT
+
+BCDIV   STMFD   SP!,{R4,R5}            ; Save dest/type
+        MOV     R4,IACC                ; R4=numerator
+        MOV     IACC,R7                ; IACC=denominator
+        BL      INTDIV                 ; IACC=R4 DIV IACC, R4=R4 MOD IACC
+        LDMFD   SP!,{R4,R5}            ; Get dest/type back
+        B       BCDONE
+
+BCMOD   STMFD   SP!,{R4,R5}            ; Save dest/type
+        MOV     R4,IACC                ; R4=numerator
+        MOV     IACC,R7                ; IACC=denominator
+        BL      INTDIV                 ; IACC=IACC DIV R4, R4=IACC MOD R4
+        MOV     IACC,R4                
+        LDMFD   SP!,{R4,R5}            ; Get dest/type back
+        B       BCDONE
+
+
+; EXIT [FOR [<var>][REPEAT][WHILE]
+; ================================
+STMEXIT BL      SPACES
+        CMP     R10,#TESCSTMT
+        LDREQB  R10,[LINE],#1
+        MOV     R2,R10
+        BL      DONES                  ; Ensure end of statement
+        CMP     R2,#TWHILE             ; WHILE=C8 95
+        MOVEQ   R3,#TENDWH
+        BEQ     EXITLP                 ; EXIT WHILE
+        CMP     R2,#TREPEAT
+        MOVEQ   R3,#TUNTIL
+        BEQ     EXITLP                 ; EXIT REPEAT
+        CMP     R2,#TFOR
+        BNE     ERSYNT                 ; Not EXIT FOR
+
+; EXIT FOR [var]
+        MOV     R3,#TNEXT
+; Need to check for presence of <var>
+
+EXITLP
+; R2=opening token, R3=closing token
+; Pops out of all nested structures until matching structure found, eg:
+;  WHILE something {stacks a WHILE}      REPEAT {stacks a REPEAT}
+;    REPEAT {stacks a REPEAT}              WHILE something {stacks a WHILE}
+;      FOR A=1 TO 2                          FOR A=1 TO 2
+;        EXIT WHILE                            EXIT REPEAT
+;      NEXT A                                NEXT A
+;    UNTIL something                       ENDWHILE
+;  ENDWHILE                              UNTIL something
+;
+        LDR     R4,[SP]                ; What's at the bottom of the stack?
+        TEQ     R4,#TENDWH             ; WHILE/ENDWHILE
+        TEQNE   R4,#TUNTIL             ; REPEAT/UNTIL
+        TEQNE   R4,#TNEXT              ; FOR/NEXT integer
+        TEQNE   R4,#TFOR               ; FOR/NEXT real
+        BNE     EXERR                  
+        BL      POPA                   ; Drop this structure from stack
+        TEQ     R4,R3                  ; Was it matching loop just popped?
+        TEQNE   R4,R2                  ; Also check for opening token for FOR
+        BNE     EXITLP                 ; Keep popping
+        MOV     IACC,#0                ; Zero nesting counter
+        STR     IACC,[SP,#-4]!         ; Prebalance stack for EWHILE
+        B       EWHILE                 ; Scan for matching closing token
+
+EXERR   TEQ     R2,#TREPEAT
+        BEQ     ERREPT                 ; Not in a REPEAT loop
+        TEQ     R2,#TWHILE
+        BEQ     ERWHIL                 ; Not in a REPEAT loop
+        B       ERNEXT                 ; Not in a FOR loop
+
+
+; DIM name{....}
+; ==============
+DIMSTRUC
+        BL      EXTMSG
+        =       127,6
+        =       "DIM struct{...} not yet implemented",0
+        ALIGN
+
+PRIVATE BL      EXTMSG
+        =       127,6
+        =       "PRIVATE not implemented",0
+        ALIGN
+
+
+; EXTMSG generates an error without BASICTrans lookup
+; ---------------------------------------------------
+; For stub code with error messages that don't exist (yet) in BASICTrans
+EXTMSG  SUB     R4,R14,PC
+        ADD     R4,PC,R4
+        SUB     R4,R4,#4               ;byte error
+        ADD     R14,ARGP,#STRACC
+        MOV     R1,R14
+        LDRB    R2,[R4],#1             ;move error number
+        STR     R2,[R1],#4
+        LDRB    R0,[R4],#1             ;unique error number
+        ADD     R5,R14,#4              ;copy my error message
+EXTMSGB LDRB    R2,[R4],#1
+        STRB    R2,[R5],#1
+        CMP     R2,#0
+        BNE     EXTMSGB
+        B       MSGERR
+
+        LNK s.Command
