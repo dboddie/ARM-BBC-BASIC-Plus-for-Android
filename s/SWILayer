@@ -1,56 +1,72 @@
+        IMPORT getCLayer
+        IMPORT CPrintRegs
+        IMPORT CGetEnv
+        IMPORT CGenerateError
+        IMPORT CExit
+        IMPORT CFind
+        IMPORT CChangeEnvironment
 
 PrintRegs
-        stmfd sp!,{r0,lr}
+        push {r0,r12,lr}
         bl getCLayer
-        str r1,[r0,#4]
-        str r2,[r0,#8]
+        mov r12,r0
+        stmia r12!,{r0-r9}
         bl CPrintRegs
-        ldmfd sp!,{r0,lr}
+        pop {r0,r12,lr}
         mov pc,lr
 
 OSGetEnv
-        stmfd sp!,{lr}
+        push {lr}
         bl getCLayer
         bl CGetEnv
         ldr r1,[r0,#4]
         ldr r2,[r0,#8]
         ldr r0,[r0]
-        ldmfd sp!,{lr}
+        pop {lr}
         mov pc,lr
 
 OSGenerateError
-        stmfd sp!,{r0,lr}
+        push {r0,lr}
         bl getCLayer        ; pass r0 implicitly to clayer.r[0]
         bl CGenerateError
-        ldmfd sp!,{r0,lr}
+        pop {r0,lr}
         mov pc,lr
 
 OSExit
-        stmfd sp!,{r0,lr}
+        push {r0,lr}
         bl CExit
-        ldmfd sp!,{r0,lr}
+        pop {r0,lr}
         mov pc,lr
 
 OSSynchroniseCodeAreas
         mov pc,lr
 
-OSClose
-        stmfd sp!,{lr}
-        bl CClose
-        ldmfd sp!,{lr}
+OSFind
+        push {lr}
+        bl CFind
+        pop {lr}
         mov pc,lr
 
 OSChangeEnvironment
-        stmfd sp!,{lr}
-        bl CChangeEnvironment
+        push {lr}
+        bl CChangeEnvironment   ; passing r0-r3 as arguments directly
         ldr r1,[r0,#4]          ; r0 is now a pointer to the register block
         ldr r2,[r0,#8]
         ldr r3,[r0,#12]
         ldr r0,[r0]
-        ldmfd sp!,{lr}
+        bl PrintRegs
+        pop {lr}
         mov pc,lr
 
+OSWriteS
+        push {lr}
+        
+        pop {lr}
+        mov pc,lr
+        
+
 QuickExit
+        bl PrintRegs
         ; syscall exit(int status)
         mov r0, #1     ; status
         mov r7, #1     ; syscall #1 (exit)

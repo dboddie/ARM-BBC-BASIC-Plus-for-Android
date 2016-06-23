@@ -72,12 +72,12 @@ EORBC
 DIVBC
 MODBC
 ORBC
-        STMFD   SP!,{R1}               ; Save operator
+        PUSH    {R1}                   ; Save operator
         BL      EXPR                   ; Evaluate expression
         BL      AEDONE
-        LDMFD   SP!,{R1}               ; Jiggle stack around
+        POP     {R1}                   ; Jiggle stack around
         LDMFD   SP!,{R4,R5}
-        STMFD   SP!,{R1}               ; Put operator back on stack for later
+        PUSH    {R1}                   ; Put operator back on stack for later
 ; R5=4, 5/8, 128, 129, 130, R4=dest
 ; TYPE=0, &2x, &4x, &8x
         TST     R5,#128                ; Check destination's type
@@ -91,7 +91,7 @@ ORBC
 ; R5=4, 5/8
 ; Need to ensure integer
         BL      INTEGY
-        LDMFD   SP!,{R1}               ; Get operator back
+        POP     {R1}                   ; Get operator back
         TEQ     R1,#TDIV
         BEQ     BCDIV
         TEQ     R1,#TMOD

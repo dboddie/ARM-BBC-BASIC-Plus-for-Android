@@ -210,15 +210,19 @@ MODULEMAIN
  |
         TEQP    PC,#0
  ]
+        push {lr}
         bl OSGetEnv
+        pop {lr}
         ;SWI     GETENV
         SUB     R1,R1,#VARS
         SUBS    R1,R1,#FREE+256
         BPL     MAIN
         ADR     R0,SEVEREERROR
+        push {lr}
         bl OSGenerateError
+        pop {lr}
         ;SWI     GENERATEERROR
-        bl OSExit
+        b OSExit
         ;SWI     EXIT
 SEVEREERROR
         &       11
@@ -326,23 +330,31 @@ PUTBACKHAND
         TEQ     R1,#0
         MOV     R0,#0
         STR     R0,[R12,#TRACEFILE-OLDERR] ;kill handle!
-        blne OSClose
+        blne OSFind
         ;SWINE   OPEN+&20000            ;XOSCLOSE
         MOV     R0,#6
         LDMIA   R12!,{R1,R2,R3}
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         MOV     R0,#9
         LDMIA   R12!,{R1,R2}
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         MOV     R0,#11
         LDMIA   R12!,{R1,R2}
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         MOV     R0,#16
         LDMIA   R12!,{R1,R2}
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         LDMFD   SP!,{R0-R3,PC}
 
@@ -379,7 +391,10 @@ MOVEMEMORY
         MOV     R1,#0
         MOV     R2,#0
         MOV     R3,#0
-        SWI     OSCHANGEENV             ;read end of application space
+        push {lr}
+        bl OSChangeEnvironment
+        pop {lr}
+        ;SWI     OSCHANGEENV             ;read end of application space
         TEQ     R1,R4                   ;are we using whole application space?
         TEQEQ   R1,R5                   ;and is HIMEM at the top of it?
         MOVNE   R1,#0
@@ -470,24 +485,37 @@ OSQUITR LDR     R1,[R12,#TRACEFILE-OLDERR] ;tracefile handle
         TEQ     R1,#0
         MOV     R0,#0
         STR     R0,[R12,#TRACEFILE-OLDERR] ;kill handle!
-        SWINE   OPEN+&20000            ;XOSCLOSE
+        blne OSFind
+        ;SWINE   OPEN+&20000            ;XOSCLOSE
         MOV     R0,#6
         LDMIA   R12!,{R1,R2,R3}
-        SWI     OSCHANGEENV
+        push {lr}
+        bl OSChangeEnvironment
+        pop {lr}
+        ;SWI     OSCHANGEENV
         MOV     R0,#9
         LDMIA   R12!,{R1,R2}
-        SWI     OSCHANGEENV
+        push {lr}
+        bl OSChangeEnvironment
+        pop {lr}
+        ;SWI     OSCHANGEENV
         MOV     R0,#11
         LDMIA   R12!,{R1,R2}
-        SWI     OSCHANGEENV
+        push {lr}
+        bl OSChangeEnvironment
+        pop {lr}
+        ;SWI     OSCHANGEENV
         MOV     R0,#16
         LDMIA   R12!,{R1,R2}
-        SWI     OSCHANGEENV
+        push {lr}
+        bl OSChangeEnvironment
+        pop {lr}
+        ;SWI     OSCHANGEENV
         ASSERT  OS_Exit_ABEX = OLDERR + 9*4
         LDMIA   R12!,{R1,R2}
         ADR     R0,EXITERR
-        bl OSExit
-        SWI     EXIT
+        b OSExit
+        ;SWI     EXIT
 MYNAME  =       "ARW!"
 EXITERR DCD     1
         DCB     "BASIC program exceeded return code limit",0
@@ -514,31 +542,41 @@ MAIN
         ADR     R1,OSERRR
         MOV     R2,#0
         ADD     R3,ARGP,#STRACC
-        bl QuickExit
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2,R3}
+        b QuickExit
         MOV     R0,#9
         ADR     R1,OSESCR
         MOV     R2,#0
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2}
         MOV     R0,#11
         ADR     R1,OSQUITR
         ADD     R2,ARGP,#OLDERR
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2}
         MOV     R0,#16
         ADR     R1,OSUPCR
         ADD     R2,ARGP,#OLDERR
+        push {lr}
         bl OSChangeEnvironment
+        pop {lr}
         ;SWI     OSCHANGEENV
         STMIA   R9!,{R1,R2}
         ADD     R0,ARGP,#FREE          ;lomem
         STR     R0,[ARGP,#PAGE]
+        push {lr}
         bl OSGetEnv
+        pop {lr}
         ;SWI     GETENV
         MOV     SP,R1                  ;get himem limit
         STR     SP,[ARGP,#HIMEM]
@@ -581,7 +619,9 @@ ENTRYL  LDRB    R1,[R0],#1
         STMFD   SP!,{R0-R9}
         STR     SP,[ARGP,#ERRSTK]
 ;see if there's a name waiting to be read in
+        push {lr}
         bl OSGetEnv
+        pop {lr}
         ;SWI     GETENV
         ADD     R3,ARGP,#CALLEDNAME
 ENTRE1  LDRB    R2,[R0],#1
@@ -649,7 +689,11 @@ CRUNCHSTR
         ALIGN
  ]
 TITLE   STMFD   SP!,{R0-R12,R14}
-        SWI     WRITES
+        push {r0,lr}
+        
+        bl OSWriteS
+        pop {r0,lr}
+        ;SWI     WRITES
 REPSTR  =       "ARM BBC BASIC V"
  [ FP=1
         =       "I"
