@@ -7,29 +7,29 @@
         IMPORT CChangeEnvironment
 
 PrintRegs
-        push {r0,r12,lr}
+        push {r0-r12,lr}
+        push {r1}
         bl getCLayer
-        mov r12,r0
-        stmia r12!,{r0-r9}
+        add r12,r0,#4       ; r0 = registers array
+        pop {r1}
+        stmia r12!,{r1-r9}
         bl CPrintRegs
-        pop {r0,r12,lr}
+        pop {r0-r12,lr}
         mov pc,lr
 
 OSGetEnv
-        push {lr}
-        bl getCLayer
+        push {r3-r9,lr}
         bl CGetEnv
         ldr r1,[r0,#4]
         ldr r2,[r0,#8]
         ldr r0,[r0]
-        pop {lr}
+        pop {r3-r9,lr}
         mov pc,lr
 
 OSGenerateError
-        push {r0,lr}
-        bl getCLayer        ; pass r0 implicitly to clayer.r[0]
+        push {r0-r9,lr}
         bl CGenerateError
-        pop {r0,lr}
+        pop {r0-r9,lr}
         mov pc,lr
 
 OSExit
@@ -48,22 +48,29 @@ OSFind
         mov pc,lr
 
 OSChangeEnvironment
-        push {lr}
+        push {r4-r9,lr}
         bl CChangeEnvironment   ; passing r0-r3 as arguments directly
         ldr r1,[r0,#4]          ; r0 is now a pointer to the register block
         ldr r2,[r0,#8]
         ldr r3,[r0,#12]
         ldr r0,[r0]
-        bl PrintRegs
-        pop {lr}
+        ;bl PrintRegs
+        pop {r4-r9,lr}
         mov pc,lr
 
 OSWriteS
-        push {lr}
-        
-        pop {lr}
-        mov pc,lr
-        
+        push {lr}               ; Add a placeholder value.
+                                ; >(invalid address) (parent lr)
+        push {r0-r9}            ; >r0-r9 (invalid address) (parent lr)
+
+        add r0,lr,#4            ; Start of the string
+        bl CWriteS
+        str r0,[sp,#40]         ; >r0-r9 (return address) (parent lr)
+
+        pop {r0-r9}             ; r0-r9  >(return address) (parent lr)
+        pop {lr}                ; r0-r9  (return address) >(parent lr)
+        pop {lr}                ; r0-r9  (return address) (parent lr) >...
+        ldr pc,[sp,#-8]
 
 QuickExit
         bl PrintRegs

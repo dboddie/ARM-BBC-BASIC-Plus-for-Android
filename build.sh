@@ -10,6 +10,8 @@ SYSROOT=/home/build/Android/android-ndk-r9d/platforms/android-15/arch-arm
 # build the toolchain that contains it.
 ASASM=$PWD/../asasm
 
+DEBUG=0
+
 OBJDIR=$PWD/o
 
 if [ ! -d $OBJDIR ]; then
@@ -20,5 +22,5 @@ cd s
 $ASASM -From BASIC105 $OBJDIR/basic.elf
 cd ..
 
-arm-linux-androideabi-gcc -std=c99 -c -o $OBJDIR/main.o c/main.c --sysroot=$SYSROOT
+arm-linux-androideabi-gcc -DDEBUG=$DEBUG -std=c99 -c -o $OBJDIR/main.o c/main.c --sysroot=$SYSROOT
 arm-linux-androideabi-gcc -o basic $OBJDIR/main.o $OBJDIR/basic.elf --sysroot=$SYSROOT
