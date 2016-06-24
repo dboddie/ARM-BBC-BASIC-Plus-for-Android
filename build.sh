@@ -19,8 +19,9 @@ if [ ! -d $OBJDIR ]; then
 fi
 
 cd s
-$ASASM -From BASIC105 $OBJDIR/basic.elf
+$ASASM -G -Verbose -From BASIC105 $OBJDIR/basic.elf
+$ASASM -G -Verbose -From SWILayer $OBJDIR/layer.elf
 cd ..
 
 arm-linux-androideabi-gcc -DDEBUG=$DEBUG -std=c99 -c -o $OBJDIR/main.o c/main.c --sysroot=$SYSROOT
-arm-linux-androideabi-gcc -o basic $OBJDIR/main.o $OBJDIR/basic.elf --sysroot=$SYSROOT
+arm-linux-androideabi-gcc -o basic $OBJDIR/main.o $OBJDIR/basic.elf $OBJDIR/layer.elf --sysroot=$SYSROOT

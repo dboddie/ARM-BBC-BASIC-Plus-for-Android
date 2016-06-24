@@ -1,16 +1,32 @@
         IMPORT getCLayer
         IMPORT CPrintRegs
-        IMPORT COSByte
-        IMPORT COSChangeEnvironment
+        IMPORT COSGetEnv
+        IMPORT COSGenerateError
         IMPORT COSExit
         IMPORT COSFind
-        IMPORT COSGenerateError
-        IMPORT COSGetEnv
-        IMPORT COSNewLine
-        IMPORT COSReadLine
+        IMPORT COSChangeEnvironment
         IMPORT COSWrite0
+        IMPORT COSNewLine
         IMPORT COSWriteC
+        IMPORT COSByte
+        IMPORT COSReadLine
         IMPORT COSWriteN
+
+        EXPORT OSGetEnv
+        EXPORT OSGenerateError
+        EXPORT OSExit
+        EXPORT OSSynchroniseCodeAreas
+        EXPORT OSFind
+        EXPORT OSChangeEnvironment
+        EXPORT OSWriteS
+        EXPORT OSNewLine
+        EXPORT OSByte
+        EXPORT OSReadLine
+        EXPORT OSWriteC
+        EXPORT OSWrite0
+        EXPORT OSWriteN
+
+        AREA |BASIC$$Code|, CODE, READONLY, PIC
 
 PrintRegs
         push {r0-r12,lr}

@@ -200,7 +200,24 @@ FREE                            #       0                      ;start of everyth
 CFLAG                           *       &20000000
 SAFECRUNCH                      *       15
 
+        IMPORT BASICTransError
+        IMPORT BASICTransHelp
+        IMPORT BASICTransMessage
         IMPORT CGetWorkspace
+        IMPORT COSWriteC
+        IMPORT OSGetEnv
+        IMPORT OSGenerateError
+        IMPORT OSExit
+        IMPORT OSSynchroniseCodeAreas
+        IMPORT OSFind
+        IMPORT OSChangeEnvironment
+        IMPORT OSWriteS
+        IMPORT OSNewLine
+        IMPORT OSByte
+        IMPORT OSReadLine
+        IMPORT OSWriteC
+        IMPORT OSWrite0
+        IMPORT OSWriteN
 
         MACRO
 $L      sys $name,$cond
