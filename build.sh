@@ -10,7 +10,7 @@ SYSROOT=/home/build/Android/android-ndk-r9d/platforms/android-15/arch-arm
 # build the toolchain that contains it.
 ASASM=$PWD/../asasm
 
-DEBUG=0
+DEBUG=1
 
 OBJDIR=$PWD/o
 

@@ -110,7 +110,7 @@ HELP    BL      SPACES
         BL      LEXTABADR              ;R2=Lexical Table
         SUB     R0,LINE,#1             ;R1=characters to interpret
         ADR     R1,HELPNAME
-        SWI     BASICTrans_HELP
+        sys BASICTransHelp
         ADR     LINE,HELPTXT
         CMP     R1,#0
         BNE     STMT
@@ -224,9 +224,9 @@ LOADFILEENTRYDONE
         MOV     R5,#10
         BL      RENUM1
         MOV     R0,#7
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         LDRVC   PC,[SP],#4
-        SWI     WRITES
+        sysb OSWriteS
         =       "Program renumbered",10,13,0
         LDR     PC,[SP],#4
 LOADFILETOKENCOPY
@@ -282,9 +282,9 @@ FNDTOP  LDRB    R1,[R0]
         BCS     FNDTOP
 BADPRO                                 ; Program in memory not valid BASIC
         MOV     R0,#8
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     CLRSTK
-        SWI     WRITES
+        sysb OSWriteS
         =       13,10,"Bad program",10,13,0
         B       CLRSTK
 SETTOP  ADD     R0,R0,#2
@@ -358,9 +358,9 @@ CHOUT   TST     R7,#128
         CMP     TYPE,SP
         MOVCC   PC,R14
         MOV     R0,#9
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     FSASET
-        SWI     WRITES
+        sysb OSWriteS
         =       10,13,"Not enough room to convert this program to text",10,13,0
         B       FSASET
 CHOUTTRACE
@@ -385,7 +385,7 @@ CHOUTS2 LDR     R0,[ARGP,#WIDTHLOC]
         ADD     R1,R1,#1
         STR     R1,[ARGP,#TALLY]
         LDMFD   SP!,{R0,R1}
-CHOUTS1 SWI     WRITEC
+CHOUTS1 sys OSWriteC
         MOV     PC,R14
 EDIT    BL      OSCLIREGS
         ADR     R0,EDITTXT
@@ -465,7 +465,7 @@ GOTCFF  CMP     R10,#TIF
 ENDLN   MOV     R0,#10
         BL      CHOUTNOCOUNT
         CMP     R7,#128
-        SWICC   WRITEI+13              ;write out return as well if to screen etc.
+        OSWriteI 13,cc              ;write out return as well if to screen etc.
         MOV     R0,#0
         STR     R0,[ARGP,#TALLY]
 GETNEW  LDRB    R0,[R2,#3]             ;R2 has initial LINE in it
@@ -646,30 +646,30 @@ LPSIMP  CMP     R0,#TREM
 LVAR    ROUT
         BL      DONES
         MOV     R0,#10
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     LVAR1
-        SWI     WRITES
+        sysb OSWriteS
         =       "Static Integer variables:               @% = """,0
         ALIGN
 LVAR1   ADD     R7,ARGP,#INTVAR
         LDR     R5,[R7],#4
         CMP     R5,#&1000000
-        SWICS   WRITEI+"+"
+        OSWriteI '+',cs
         AND     R4,R5,#&F0000
         CMP     R4,#&10000
-        SWICC   WRITEI+"g"
-        SWIEQ   WRITEI+"e"
-        SWIHI   WRITEI+"f"
+        OSWriteI 'g',cc
+        OSWriteI 'e',eq
+        OSWriteI 'f',hi
         AND     R0,R5,#&FF
         MOV     TYPE,#0
         BL      POSITE
         TST     R5,#&800000
-        SWIEQ   WRITEI+"."
-        SWINE   WRITEI+","
+        OSWriteI '.',eq
+        OSWriteI 44,ne          ; ,
         AND     R0,R5,#&FF00
         MOV     R0,R0,LSR #8
         BL      POSITE
-        SWI     WRITEI+""""
+        OSWriteI '"'
         MOV     R6,#"A"
         MOV     R5,#3
 10      ADD     R10,R0,#5
@@ -677,20 +677,21 @@ LVAR1   ADD     R7,ARGP,#INTVAR
         TST     R5,#3
         SWIEQ   NEWLINE
         BEQ     %12
-13      SWI     WRITEI+" "
+13
+        OSWriteI ' '
         ADD     R10,R10,#1
         CMP     R10,#20
         BCC     %13
 12      MOV     R0,R6
-        SWI     WRITEC
-        SWI     WRITES
+        sys OSWriteC
+        sysb OSWriteS
         =       "% = ",0
         LDR     IACC,[R7],#4
         BL      LVRPINT
         ADD     R6,R6,#1
         TEQ     R6,#"Z"+1
         BNE     %10
-        SWI     NEWLINE
+        sys OSNewLine
         MOV     R0,#0
         STR     R0,[ARGP,#FNTEMPLOC]
         STR     R0,[ARGP,#FNTEMPLOC+4]
@@ -707,9 +708,9 @@ LVAR1   ADD     R7,ARGP,#INTVAR
         BEQ     %21
         MOV     R11,#256
         MOV     R0,#11
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     %20
-        SWI     WRITES
+        sysb OSWriteS
         =       "Dynamic variables:",0
         B       %20
 22      LDR     R4,[R5],#4             ;head of chain
@@ -727,11 +728,11 @@ LVAR1   ADD     R7,ARGP,#INTVAR
 LVRDFF  MOV     R2,R4
         LDR     R4,[R2],#4             ;next in chain
         MOV     R0,R6
-        SWI     WRITEC
+        sys OSWriteC
 LVRDNO  ADD     R11,R11,#1
         LDRB    R0,[R2],#1
         TEQ     R0,#0
-        SWINE   WRITEC
+        sys OSWriteC,ne
         BNE     LVRDNO
         MOV     R0,R2
         LDRB    R2,[R0,#-2]
@@ -750,7 +751,7 @@ LVRDNO  ADD     R11,R11,#1
         BIC     R0,R0,#3
  ]
         BL      VARIND
-        SWI     WRITES
+        sysb OSWriteS
         =       " = ",0
         ADD     R11,R11,#3
         STR     R4,[SP,#-4]!
@@ -770,23 +771,23 @@ LVRDAP  SUB     R0,R0,#1
         LDR     R0,[R2],#4
         ADD     R11,R11,#1
         TEQ     R0,#0
-        SWINE   WRITEI+","
+        OSWriteI 44,ne          ; ,
         BNE     LVRDAP
-        SWI     WRITEI+")"
+        OSWriteI ')'
         B       %23
 LVRDAN  CMP     R2,#1
         BEQ     LVRDAN2
-        SWI     WRITES
+        sysb OSWriteS
         =       "undimensioned)",0
         ADD     R11,R11,#14
         B       %23
-LVRDAN2 SWI     WRITES
+LVRDAN2 sysb OSWriteS
         =       "local)",0
         ADD     R11,R11,#6
         B       %23
 25      MOV     TYPE,#128
         BL      VARIND
-        SWI     WRITES
+        sysb OSWriteS
         =       " = """,0
         ADD     R11,R11,#5
         ADD     R1,ARGP,#STRACC
@@ -796,57 +797,58 @@ LVRDAN2 SWI     WRITES
         TEQ     R0,#127
         CMPNE   R0,#" "-1
         MOVLS   R0,#"."
-        SWI     WRITEC
+        sys OSWriteC
         ADD     R11,R11,#1
         TEQ     R1,CLEN
         BNE     %27
-28      SWI     WRITEI+""""
+28      
+        OSWriteI '"'
         B       %23
 29      ADD     R6,R6,#1
         TEQ     R5,R7
         BNE     %22
-        SWI     NEWLINE
+        sys OSNewLine
 LVARDX  LDR     R1,[ARGP,#PROCPTR]
         TEQ     R1,#0
         BEQ     LVARPX
         MOV     R11,#0
         MOV     R0,#12
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     LVARP1
-        SWI     WRITES
+        sysb OSWriteS
         =       "Procedures:",10,13,0
         ALIGN
 LVARP1  BL      LVARFMT
-        SWI     WRITES
+        sysb OSWriteS
         =       "PROC",0
         ADD     R11,R11,#3
         BL      LVARFN
         BNE     LVARP1
-        SWI     NEWLINE
+        sys OSNewLine
 LVARPX  LDR     R1,[ARGP,#FNPTR]
         TEQ     R1,#0
         BEQ     LVARLIB
         MOV     R11,#0
         MOV     R0,#13
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     LVARF0
-        SWI     WRITES
+        sysb OSWriteS
         =       "Functions:",10,13,0
         ALIGN
 LVARF0  BL      LVARFMT
-        SWI     WRITES
+        sysb OSWriteS
         =       "FN",0
         ADD     R11,R11,#1
         BL      LVARFN
         BNE     LVARF0
-        SWI     NEWLINE
+        sys OSNewLine
 LVARLIB LDR     R1,[ARGP,#LIBRARYLIST]
         TEQ     R1,#0
         BEQ     LVARINST
         MOV     R0,#14
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     LVARLIB0
-        SWI     WRITES
+        sysb OSWriteS
         =       "Libraries:",10,13,0
         ALIGN
 LVARLIB0
@@ -860,9 +862,9 @@ LVARINST
         TEQ     R1,#0
         BEQ     LVAROVER
         MOV     R0,#15
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     LVARILIB0
-        SWI     WRITES
+        sysb OSWriteS
         =       "Installed libraries:",10,13,0
         ALIGN
 LVARILIB0
@@ -880,9 +882,9 @@ LVAROVER
         CMN     R2,#1
         BEQ     LVARDONE
         MOV     R0,#16
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     LVARCUROVERLAY
-        SWI     WRITES
+        sysb OSWriteS
         =       "Current Overlay (from """,0
         ALIGN
 LVARCUROVERLAY
@@ -891,8 +893,8 @@ LVARCUROVERLAY
         BL      VARSTR
         ADD     R0,ARGP,#STRACC
         SUB     R1,CLEN,R0
-        SWI     WRITEN
-        SWI     WRITES
+        sys OSWriteN
+        sysb OSWriteS
         =       """):",10,13,0
         ALIGN
         ADD     LINE,R7,#12+4
@@ -907,13 +909,13 @@ LVARLINE
         MOVEQ   PC,R14
         STMFD   SP!,{R1,R14}
         BL      LISTLINE
-        SWI     NEWLINE
+        sys OSNewLine
         LDMFD   SP!,{R1,PC}
 ;list functions or procedures
 LVARFN  STMFD   SP!,{R14,R8}
         LDR     R10,[R1],#4
         MOV     R0,R1
-        SWI     WRITE0
+        sys OSWrite0
         SUB     R1,R0,R1
         ADD     R11,R11,R1
         ADD     R0,R0,#3
@@ -921,51 +923,51 @@ LVARFN  STMFD   SP!,{R14,R8}
         LDMFD   R7!,{R0,R1}
         TEQ     R0,#0
         BEQ     LVARF1
-        SWI     WRITEI+"("
+        OSWriteI '('
         ADD     R11,R11,#2
 LVARFA  TST     R1,#&100
         BEQ     %41
         TST     R1,#&8000
         BNE     %41
-        SWI     WRITES
+        sysb OSWriteS
         =       "RETURN ",0
         ADD     R11,R11,#7
 41      ANDS    R2,R1,#255
         BNE     %42
-        SWI     WRITES
+        sysb OSWriteS
         =       "byte",0
         ADD     R11,R11,#4
 42      TEQ     R2,#4
         BNE     %43
-        SWI     WRITES
+        sysb OSWriteS
         =       "integer",0
         ADD     R11,R11,#7
 43      TEQ     R2,#TFPLV
         BNE     %44
-        SWI     WRITES
+        sysb OSWriteS
         =       "real",0
         ADD     R11,R11,#4
 44      TEQ     R2,#128
         BNE     %45
-        SWI     WRITES
+        sysb OSWriteS
         =       "string",0
         ADD     R11,R11,#6
 45      CMP     R2,#129
         BCC     %46
-        SWI     WRITES
+        sysb OSWriteS
         =       "$ string",0
         ADD     R11,R11,#8
 46      TST     R1,#&8000
         BEQ     %49
-        SWI     WRITES
+        sysb OSWriteS
         =       " array",0
         ADD     R11,R11,#6
 49      LDMFD   R7!,{R0,R1}
         TEQ     R0,#0
         ADDNE   R11,R11,#1
-        SWINE   WRITEI+","
+        OSWriteI 44,ne          ; ,
         BNE     LVARFA
-        SWI     WRITEI+")"
+        OSWriteI ')'
 LVARF1  MOVS    R1,R10
         LDMFD   SP!,{R8,PC}
 LVARFMT STR     R14,[SP,#-4]!
@@ -987,7 +989,7 @@ LVRPRT  MOV     R4,#&900               ;TEMPORARY!
         ADD     R0,ARGP,#STRACC
         MOV     R5,#0
         STRB    R5,[TYPE]
-        SWI     WRITE0
+        sys OSWrite0
         ADD     R0,ARGP,#STRACC
         SUB     R0,TYPE,R0
         ADD     R11,R11,R0
@@ -1089,17 +1091,17 @@ NUMBH   LDRB    R10,[R5,#1]
 NUMBJ   MOV     R1,R0
         MOV     R2,R7
         MOV     R0,#23
-        SWI     BASICTrans_Message
+        sys BASICTransMessage
         BVC     NUMBF
-        SWI     WRITES
+        sysb OSWriteS
         =       "Failed with ",0
         MOV     R0,R1
         BL      POSITE
-        SWI     WRITES
+        sysb OSWriteS
         =       " on line ",0
         MOV     R0,R7
         BL      POSITE
-        SWI     NEWLINE
+        sys OSNewLine
         B       NUMBF
 SAVE    BL      SPACES
         TEQ     R10,#13

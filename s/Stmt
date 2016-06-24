@@ -742,7 +742,7 @@ INPHP   CMP     R10,#","
         TEQ     R5,#0
         BNE     INGOT
 INGET   TST     R4,#&80
-        SWINE   WRITEI+"?"
+        OSWriteI '?',ne
         BL      INLINE
         SUB     CLEN,R1,#1
 INLEN   LDRB    R0,[CLEN,#1]!
@@ -1187,7 +1187,7 @@ PRINTS  ADD     R1,ARGP,#STRACC
         BNE     PRLOP2
         ADD     R0,ARGP,#STRACC
         SUB     R1,CLEN,R0
-        SWI     WRITEN
+        sys OSWriteN
         LDR     R0,[ARGP,#TALLY]
         ADD     R0,R0,R1
         STR     R0,[ARGP,#TALLY]
@@ -1238,12 +1238,12 @@ TAB     STMFD   SP!,{R4,R5,R14}
 TAB2    STR     IACC,[SP,#-4]!
         BL      BRA
         BL      INTEGZ
-        SWI     WRITEI+31
+        OSWriteI 31
         MOV     R1,IACC
         LDR     IACC,[SP],#4
-        SWI     WRITEC
+        sys OSWriteC
         MOV     R0,R1
-        SWI     WRITEC
+        sys OSWriteC
         MOV     LINE,AELINE
         B       PRSPEX
 PROC    MOV     AELINE,LINE            ;AELINE -> start of identifier

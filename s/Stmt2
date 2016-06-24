@@ -78,7 +78,7 @@ LPAGEOUT
         MOV     R0,#4
         SWI     BASICTrans_Message
         BVC     NXT
-        SWI     WRITES
+        sysb OSWriteS
         =       "Out of range value assigned to PAGE",10,13,0
         B       NXT
 LPAGEROM
@@ -162,7 +162,7 @@ LLOMEMOUT
         MOV     R0,#5
         SWI     BASICTrans_Message
         BVC     NXT
-        SWI     WRITES
+        sysb OSWriteS
         =       "Out of range value assigned to LOMEM",10,13,0
         B       NXT
 LHIMEM  BL      EQAEEX
@@ -184,7 +184,7 @@ LHIMEMOUT
         MOV     R0,#6
         SWI     BASICTrans_Message
         BVC     NXT
-        SWI     WRITES
+        sysb OSWriteS
         =       "Out of range value assigned to HIMEM",10,13,0
         B       NXT
 LLEFTD  BL      AELV
@@ -395,7 +395,7 @@ CLG     MOV     R0,#16
         B       CLSA
 CLS     MOV     R0,#12
 CLSA    BL      DONES
-        SWI     WRITEC
+        sys OSWriteC
         BL      CTALLY
         B       NXT
 CIRCLE  MOV     R0,#&95
@@ -442,8 +442,8 @@ COLOUR  BL      SPACES
         TEQ     R10,#","
         BEQ     PALETTE
         BL      AEDONE
-        SWI     WRITEI+17
-        SWI     WRITEC
+        OSWriteI 17
+        sys OSWriteC
         B       NXT
 COLOURTINT
         LDRB    R10,[AELINE],#1
@@ -453,8 +453,8 @@ COLOURTINT
         BL      EXPRDN
         MOV     R1,IACC
         LDR     IACC,[SP],#4
-        SWI     WRITEI+17
-        SWI     WRITEC
+        OSWriteI 17
+        sys OSWriteC
         MOV     IACC,IACC,LSR #7
         AND     IACC,IACC,#1
         B       TINTEND
@@ -466,8 +466,8 @@ PALETTE STR     IACC,[SP,#-4]!
         BL      AEDONE
         MOV     R1,IACC
         LDR     IACC,[SP],#4
-        SWI     WRITEI+19
-        SWI     WRITEC
+        OSWriteI 19
+        sys OSWriteC
         MOV     IACC,R1
         BL      WRITEG
         MOV     IACC,R1,LSR #16
@@ -491,18 +491,18 @@ PALETTE4
  ]
         MOV     R6,#16
 PROGPAL MOV     R5,IACC
-        SWI     WRITEI+19
+        OSWriteI 19
         LDMFD   SP!,{R1,R2,R3}
         MOV     IACC,R3
-        SWI     WRITEC
+        sys OSWriteC
         MOV     IACC,R6
-        SWI     WRITEC
+        sys OSWriteC
         MOV     IACC,R2
-        SWI     WRITEC
+        sys OSWriteC
         MOV     IACC,R1
-        SWI     WRITEC
+        sys OSWriteC
         MOV     IACC,R5
-        SWI     WRITEC
+        sys OSWriteC
         B       NXT
 PALETTE5
         STR     IACC,[SP,#-4]!
@@ -591,13 +591,13 @@ DOCOLOUROFON3
         MOVNE   R3,#0
         SWI     COLOURTRANSSETTEXTCOLOUR
         B       DOCOLOUROFON3
-CURSON  SWI     WRITES
+CURSON  sysb OSWriteS
         =       23,1,1,0
         MOV     R1,#7
         BL      ZEROX
         B       NXT
 CURSOFF BL      DONES
-        SWI     WRITES
+        sysb OSWriteS
         =       23,1,0,0
         MOV     R1,#8
         BL      ZEROX
@@ -790,10 +790,10 @@ GCOLTINT
         BL      EXPRDN
         MOV     R1,IACC
         LDMFD   SP!,{R0,R2}
-        SWI     WRITEI+18
-        SWI     WRITEC
+        OSWriteI 18
+        sys OSWriteC
         MOV     R0,R2
-        SWI     WRITEC
+        sys OSWriteC
         TST     R0,#128
         MOVEQ   R0,#2
         MOVNE   R0,#3
@@ -808,10 +808,10 @@ GCOL2   STR     IACC,[SP,#-4]!
         CMP     R10,#TESCSTMT
         BEQ     GCOLTINT
 DOGCOL  BL      AEDONE
-        SWI     WRITEI+18
-        SWI     WRITEC
+        OSWriteI 18
+        sys OSWriteC
         MOV     IACC,R1
-        SWI     WRITEC
+        sys OSWriteC
         B       NXT
 GCOL3   LDR     R1,[SP],#4
         MOV     R14,#0
@@ -940,8 +940,8 @@ MODES   MOV     AELINE,LINE
         BCS     MODESS
         MOV     R14,#1
         STRB    R14,[ARGP,#MEMM]
-        SWI     WRITEI+22
-        SWI     WRITEC
+        OSWriteI 22
+        sys OSWriteC
         MOV     R14,#0
         STRB    R14,[ARGP,#MEMM]
         BL      CTALLY
@@ -1211,7 +1211,7 @@ PLOTER1 CMP     R10,#"B"
 ORGIN   BL      INTEXA
         STR     IACC,[SP,#-4]!
         BL      EXPRDN
-        SWI     WRITEI+29
+        OSWriteI 29
         MOV     R3,IACC
         LDR     R0,[SP],#4               ;X
         BL      WRITEG
@@ -1334,16 +1334,16 @@ DOTINT  BL      INTEXA
         MOV     R1,IACC
         LDR     IACC,[SP],#4
 ;TINT R0,R1
-TINTEND SWI     WRITEI+23
-        SWI     WRITEI+17
-        SWI     WRITEC
+TINTEND OSWriteI 23
+        OSWriteI 17
+        sys OSWriteC
         MOV     IACC,R1
-        SWI     WRITEC
+        sys OSWriteC
         MOV     R1,#6
         BL      ZEROX
         B       NXT
 VDUP    MOV     IACC,IACC,LSR #8
-        SWI     WRITEC
+        sys OSWriteC
 VDU     BL      SPACES
 VDUL    CMP     R10,#":"
         BEQ     NXT
@@ -1355,7 +1355,7 @@ VDUL    CMP     R10,#":"
         BL      EXPR
         MOV     LINE,AELINE
         BL      INTEGY
-        SWI     WRITEC
+        sys OSWriteC
         CMP     R10,#","
         BEQ     VDU
         CMP     R10,#";"
@@ -1392,13 +1392,13 @@ DOPLOT  SWI     XOSPLOT
         MOVVC   PC,R14
         SWI     GENERATEERROR
 ;write lo byte, high byte
-WRITEG  SWI     WRITEC
+WRITEG  sys OSWriteC
         MOV     R0,R0,LSR #8
-        SWI     WRITEC
+        sys OSWriteC
         MOV     PC,R14
 ;write R1 zeroes
 ZEROX   MOV     R0,#0
-ZEROX1  SWI     WRITEC
+ZEROX1  sys OSWriteC
         SUBS    R1,R1,#1
         BGT     ZEROX1
         MOV     PC,R14
@@ -2124,11 +2124,11 @@ MOSFL2  LDRB    R4,[SP],#1
         B       RETMOS
 MOSRDCH SWI     READC
         B       RETMOS
-MOSNEWL SWI     NEWLINE
+MOSNEWL sys OSNewLine
         B       RETMOS
 MOSASCI TEQ     R0,#13
-        SWIEQ   WRITEI+10
-MOSWRCH SWI     WRITEC
+        OSWriteI 10,eq
+MOSWRCH sys OSWriteC
         B       RETMOS
 MOSWORD SWI     WORD
         B       RETMOS

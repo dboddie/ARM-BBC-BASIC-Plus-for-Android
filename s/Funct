@@ -63,17 +63,17 @@ FNTRC4  TEQ     R10,#TPROC
 
 TRCSTART
         TST     R5,#TINTEGER
-        SWIEQ   WRITEI+"["
-        SWINE   WRITEI+"{"
+        OSWriteI '[',eq
+        OSWriteI '{',ne
         MOV     PC,R14
 
 TRCEND  LDR     R0,[ARGP,#TRACEFILE]
         CMP     R0,#0
         BNE     TRCEND0
         TST     R5,#TINTEGER
-        SWIEQ   WRITEI+"]"
-        SWINE   WRITEI+"}"
-        SWI     WRITEI+" "
+        OSWriteI ']',eq
+        OSWriteI '}',ne
+        OSWriteI ' '
         B       TRCEND1
 TRCEND0 STR     R14,[SP,#-4]!
         MOV     R0,#10

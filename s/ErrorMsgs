@@ -19,55 +19,55 @@
 ; 
  [ 1=0 ;debug code
 FSHOW   STMFD   SP!,{R14,R0,R10,R9}
-        SWI     WRITES
+        sysb OSWriteS
         =       "AA ",0
         MOV     R10,R0
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " AX ",0
         MOV     R10,R1
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " AG ",0
         MOV     R10,R2
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " AS ",0
         MOV     R10,R3
         BL      WORDHX
-        SWI     NEWLINE
-        SWI     WRITES
+        sys OSNewLine
+        sysb OSWriteS
         =       "WA ",0
         MOV     R10,R4
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " WX ",0
         MOV     R10,R5
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " WG ",0
         MOV     R10,R6
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " WS ",0
         MOV     R10,R7
         BL      WORDHX
-        SWI     NEWLINE
-        SWI     WRITES
+        sys OSNewLine
+        sysb OSWriteS
         =       "SP ",0
         MOV     R10,R13
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " AELINE ",0
         MOV     R10,R11
         BL      WORDHX
-        SWI     WRITES
+        sysb OSWriteS
         =       " LINE ",0
         MOV     R10,R12
         BL      WORDHX
-        SWI     NEWLINE
+        sys OSNewLine
         LDMFD   SP!,{R0,R10,R9,PC}
-WORDSP  SWI     WRITEI+" "
+WORDSP  OSWriteI ' '
  ]
 ;print R10
 WORDHX  STMFD   SP!,{R0,R9}
@@ -77,7 +77,7 @@ WORDLP  MOV     R0,R10,LSR R9
         CMP     R0,#9
         ORRLS   R0,R0,#"0"
         ADDHI   R0,R0,#"A"-10
-        SWI     WRITEC
+        sys OSWriteC
         SUBS    R9,R9,#4
         BPL     WORDLP
         LDMFD   SP!,{R0,R9}
@@ -834,4 +834,4 @@ ERMVSTK BL      MSG
  ]
 Basic_End
 
-        END
+        LNK SWILayer

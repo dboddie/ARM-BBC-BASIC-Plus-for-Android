@@ -225,7 +225,7 @@ CASMKET MVN     R10,#0                 ;deal with ]
         MOV     LINE,AELINE
         MOV     R10, R0
         MOV     R0, #0
-        SWI     XOSSYNCHRONISECODEAREAS
+        sys OSSynchroniseCodeAreas
         MOV     R0, R10
         B       STMT
 
@@ -1511,7 +1511,7 @@ CASMXPLACED
         STR     R10,[SP,#-4]!
         MOV     R10,R3
         BL      WORDHX
-        SWI     WRITEI+" "
+        OSWriteI ' '
         MOV     R10,R1
         CMP     R2,#5
         BCS     CASMBYTPRINT
@@ -1525,7 +1525,7 @@ CASMXPLACED
 CASMXPAD1
 
         BEQ     CASMX1
-        SWI     WRITEI+" "
+        OSWriteI ' '
         SUBS    R0,R0,#1
         B       CASMXPAD1
 CASMXCOM
@@ -1534,13 +1534,13 @@ CASMXCOM
         B       CASMX
 CASMBYTPRINT
 
-        SWI     WRITES
+        sysb OSWriteS
         =       "        ",0
         ALIGN
 ;print bytes
 CASMX1  LDR     R10,[SP],#4
         MOV     TYPE,#0
-        SWI     WRITEI+" "
+        OSWriteI ' '
         LDRB    R0,[LINE],#1
         CMP     R0,#"."
         BNE     CASMXT
@@ -1563,7 +1563,7 @@ CASMXL  BL      TOKOUT
 CASMXT  CMP     R0,#":"
         CMPNE   R0,#13
         BEQ     CASMX3
-        SWI     WRITES
+        sysb OSWriteS
         =       "          ",0
         ALIGN
         SUB     LINE,LINE,#1
@@ -1578,7 +1578,7 @@ CASMX2  MOV     R7,#0
         LDRB    R0,[LINE],#1
         CMP     LINE,AELINE
         BCC     CASMX2
-CASMX3  SWI     NEWLINE
+CASMX3  sys OSNewLine
 CASMXN  ADD     R3,R3,R2
         STR     R3,[ARGP,#ASSPC]
         MOV     LINE,AELINE

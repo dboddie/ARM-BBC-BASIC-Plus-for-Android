@@ -1,10 +1,16 @@
         IMPORT getCLayer
         IMPORT CPrintRegs
-        IMPORT CGetEnv
-        IMPORT CGenerateError
-        IMPORT CExit
-        IMPORT CFind
-        IMPORT CChangeEnvironment
+        IMPORT COSByte
+        IMPORT COSChangeEnvironment
+        IMPORT COSExit
+        IMPORT COSFind
+        IMPORT COSGenerateError
+        IMPORT COSGetEnv
+        IMPORT COSNewLine
+        IMPORT COSReadLine
+        IMPORT COSWrite0
+        IMPORT COSWriteC
+        IMPORT COSWriteN
 
 PrintRegs
         push {r0-r12,lr}
@@ -19,7 +25,7 @@ PrintRegs
 
 OSGetEnv
         push {r3-r9,lr}
-        bl CGetEnv
+        bl COSGetEnv
         ldr r1,[r0,#4]
         ldr r2,[r0,#8]
         ldr r0,[r0]
@@ -28,28 +34,25 @@ OSGetEnv
 
 OSGenerateError
         push {r0-r9,lr}
-        bl CGenerateError
+        bl COSGenerateError
         pop {r0-r9,lr}
         mov pc,lr
 
 OSExit
-        push {r0,lr}
-        bl CExit
-        pop {r0,lr}
-        mov pc,lr
+        b COSExit
 
 OSSynchroniseCodeAreas
         mov pc,lr
 
 OSFind
-        push {lr}
-        bl CFind
-        pop {lr}
+        push {r0-r9,lr}
+        bl COSFind
+        pop {r0-r9,lr}
         mov pc,lr
 
 OSChangeEnvironment
         push {r4-r9,lr}
-        bl CChangeEnvironment   ; passing r0-r3 as arguments directly
+        bl COSChangeEnvironment   ; passing r0-r3 as arguments directly
         ldr r1,[r0,#4]          ; r0 is now a pointer to the register block
         ldr r2,[r0,#8]
         ldr r3,[r0,#12]
@@ -63,14 +66,70 @@ OSWriteS
                                 ; >(invalid address) (parent lr)
         push {r0-r9}            ; >r0-r9 (invalid address) (parent lr)
 
-        add r0,lr,#4            ; Start of the string
-        bl CWriteS
+        mov r0,lr               ; Start of the string
+        bl COSWrite0
         str r0,[sp,#40]         ; >r0-r9 (return address) (parent lr)
 
         pop {r0-r9}             ; r0-r9  >(return address) (parent lr)
         pop {lr}                ; r0-r9  (return address) >(parent lr)
         pop {lr}                ; r0-r9  (return address) (parent lr) >...
         ldr pc,[sp,#-8]
+
+BASICTransMessage
+BASICTransHelp
+BASICTransError
+        push {r0}
+        mrs r0,cpsr
+        orr r0,r0,#&10000000    ; set overflow to indicate failure
+        msr cpsr_f,r0
+        pop {r0}
+        mov pc,lr
+
+OSNewLine
+        push {r0-r9,lr}
+        bl COSNewLine
+        pop {r0-r9,lr}
+        mov pc,lr
+
+OSByte
+        push {r3-r9,lr}
+        bl COSByte
+        ldr r1,[r0,#4]          ; r0 is now a pointer to the register block
+        ldr r2,[r0,#8]
+        ldr r0,[r0]
+        pop {r3-r9,lr}
+        mov pc,lr
+
+OSReadLine
+        push {r4-r9,lr}
+        push {r1-r3}
+        bl getCLayer            ; Store r0 and get the register block address.
+        pop {r1-r3}
+        add r0,r0,#4
+        stmia r12!,{r1-r4}      ; Store r1-r4 in the block.
+        bl COSReadLine
+        ldr r1,[r0,#4]          ; Retrieve r1 from the block.
+        pop {r4-r9,lr}
+        mov pc,lr
+
+OSWriteC
+        push {r0-r9,lr}
+        bl COSWriteC
+        pop {r0-r9,lr}
+        mov pc,lr
+
+OSWrite0
+        push {r0-r9,lr}
+        bl COSWrite0
+        pop {r0-r9,lr}
+        mov pc,lr
+
+OSWriteN
+        push {r0-r9,lr}
+        bl COSWriteN
+        pop {r0-r9,lr}
+        mov pc,lr
+
 
 QuickExit
         bl PrintRegs
@@ -80,4 +139,4 @@ QuickExit
         swi #0         ; invoke syscall
 
 
-        LNK     fp
+        END
