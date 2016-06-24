@@ -12,6 +12,9 @@
         IMPORT COSReadLine
         IMPORT COSWriteN
 
+        EXPORT BASICTransError
+        EXPORT BASICTransHelp
+        EXPORT BASICTransMessage
         EXPORT OSGetEnv
         EXPORT OSGenerateError
         EXPORT OSExit
@@ -25,6 +28,8 @@
         EXPORT OSWriteC
         EXPORT OSWrite0
         EXPORT OSWriteN
+        EXPORT PrintRegs
+        EXPORT QuickExit
 
         AREA |BASIC$$Code|, CODE, READONLY, PIC
 
@@ -117,15 +122,15 @@ OSByte
         mov pc,lr
 
 OSReadLine
-        push {r4-r9,lr}
+        push {r4-r9,r12,lr}
         push {r1-r3}
         bl getCLayer            ; Store r0 and get the register block address.
         pop {r1-r3}
-        add r0,r0,#4
+        add r12,r0,#4
         stmia r12!,{r1-r4}      ; Store r1-r4 in the block.
         bl COSReadLine
         ldr r1,[r0,#4]          ; Retrieve r1 from the block.
-        pop {r4-r9,lr}
+        pop {r4-r9,r12,lr}
         mov pc,lr
 
 OSWriteC

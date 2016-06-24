@@ -218,18 +218,22 @@ SAFECRUNCH                      *       15
         IMPORT OSWriteC
         IMPORT OSWrite0
         IMPORT OSWriteN
+        IMPORT PrintRegs
+        IMPORT QuickExit
 
         MACRO
 $L      sys $name,$cond
 $L      push {lr}
-        bl$cond $name
+        mov lr,pc
+        b$cond $name
         pop {lr}
         MEND
 
         MACRO
 $L      sysb $name          ; One way call into syscall code that sets its own
 $L      push {lr}           ; return address.
-        bl $name
+        mov lr,pc
+        b $name
         MEND
 
         MACRO
@@ -242,7 +246,8 @@ $L      eor $l,$l,$r        ; $l' = $l ^ $r
         MACRO
 $L      GetWorkspaceInR0
 $L      push {r1-r9,lr}
-        bl CGetWorkspace
+        mov lr,pc
+        b CGetWorkspace
         pop {r1-r9,lr}
         MEND
 
@@ -257,7 +262,8 @@ $L      mov $r,r0
 $L      OSWriteI $c,$cond
 $L      push {r0-r9,lr}
         mov r0,#$c
-        bl$cond COSWriteC
+        mov lr,pc
+        b$cond COSWriteC
         pop {r0-r9,lr}
         MEND
 
@@ -386,7 +392,7 @@ PUTBACKHAND
         TEQ     R1,#0
         MOV     R0,#0
         STR     R0,[R12,#TRACEFILE-OLDERR] ;kill handle!
-        blne OSFind
+        sys OSFind,ne
         ;SWINE   OPEN+&20000            ;XOSCLOSE
         MOV     R0,#6
         LDMIA   R12!,{R1,R2,R3}
@@ -527,7 +533,7 @@ OSQUITR LDR     R1,[R12,#TRACEFILE-OLDERR] ;tracefile handle
         TEQ     R1,#0
         MOV     R0,#0
         STR     R0,[R12,#TRACEFILE-OLDERR] ;kill handle!
-        blne OSFind
+        sys OSFind,ne
         ;SWINE   OPEN+&20000            ;XOSCLOSE
         MOV     R0,#6
         LDMIA   R12!,{R1,R2,R3}
