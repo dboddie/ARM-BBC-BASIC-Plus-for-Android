@@ -160,7 +160,7 @@ TEXTLOAD
 LOADFILEFINAL
         MOV     R0,#5
         ADD     R1,ARGP,#STRACC
-        SWI     FILE
+        sys OSFile
         SUB     R7,SP,#1024
         CMP     R0,#1
         SUBEQ   R7,R7,R4
@@ -171,7 +171,7 @@ LOADFILEFINAL
         MOV     R2,R7
         MOV     R3,#0
         MOV     R0,#&FF
-        SWI     FILE
+        sys OSFile
         MOV     R0,#13
         LDR     R1,[ARGP,#PAGE]
         STRB    R0,[R1],#1
@@ -368,12 +368,12 @@ CHOUTTRACE
         LDR     R1,[ARGP,#TRACEFILE]
         TEQ     R1,#0
         BEQ     CHOUTS2
-        SWI     BPUT+&20000            ;xosbput
+        sys OSBPut          ;xosbput
         LDMVCFD SP!,{R0,R1}
         MOVVC   PC,R14
         MOV     R0,#0
         STR     R0,[ARGP,#TRACEFILE]
-        SWI     OPEN+&20000            ;xosfind=close
+        sys OSFind                      ; xosfind
         LDMFD   SP!,{R0,R1}
         MOV     PC,R14
 CHOUTS  STMFD   SP!,{R0,R1}
@@ -389,7 +389,7 @@ CHOUTS1 sys OSWriteC
         MOV     PC,R14
 EDIT    BL      OSCLIREGS
         ADR     R0,EDITTXT
-        SWI     CLI
+        sys OSCLI
         LDR     R0,[ARGP,#TOP]
         CMP     R0,#0
         BPL     CLRSTK
@@ -510,7 +510,7 @@ TWINCOPYCALL
         BNE     TWINCOPYCALL
         ADD     R0,ARGP,#STRACC
         BL      OSCLIREGS
-        SWI     CLI
+        sys OSFile
 TWINTXT =       "Twin"
 TWINHX  MOV     R2,#32-4               ;covert TYPE to string ptd to by r1
 TWINLP  MOV     R0,TYPE,LSR R2
@@ -1124,12 +1124,12 @@ SAVEFILECLRSTK
         MOV     R3,#3
         STR     R3,[R1]
         STR     R2,[R1,#4]
-        SWI     WORD
+        sys OSWord
         MOV     R0,#0
         LDR     R2,[R1,#4]
         LDR     R3,[R1]
         LDR     R1,[SP],#4
-        SWI     FILE
+        sys OSFile
         B       CLRSTK
 SAVEIC  BL      ENDER
         LDR     R1,[ARGP,#PAGE]
@@ -1154,7 +1154,7 @@ OSFILELOAD
         MOV     R0,#255
         MOV     R3,#0
 OSFILERETURN
-        SWI     FILE
+        sys OSFile
         MOV     PC,R14
 OSFILEINFOSTRACC
         ADD     R1,ARGP,#STRACC

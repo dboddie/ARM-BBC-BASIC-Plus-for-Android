@@ -1,30 +1,41 @@
         IMPORT getCLayer
         IMPORT CPrintRegs
+        IMPORT COSBGet
+        IMPORT COSBPut
         IMPORT COSGetEnv
         IMPORT COSGenerateError
         IMPORT COSExit
+        IMPORT COSFile
         IMPORT COSFind
         IMPORT COSChangeEnvironment
         IMPORT COSWrite0
         IMPORT COSNewLine
         IMPORT COSWriteC
         IMPORT COSByte
+        IMPORT COSReadC
         IMPORT COSReadLine
+        IMPORT COSWord
         IMPORT COSWriteN
 
         EXPORT BASICTransError
         EXPORT BASICTransHelp
         EXPORT BASICTransMessage
+        EXPORT OSBGet
+        EXPORT OSBPut
+        EXPORT OSCLI
         EXPORT OSGetEnv
         EXPORT OSGenerateError
         EXPORT OSExit
         EXPORT OSSynchroniseCodeAreas
+        EXPORT OSFile
         EXPORT OSFind
         EXPORT OSChangeEnvironment
         EXPORT OSWriteS
         EXPORT OSNewLine
         EXPORT OSByte
+        EXPORT OSReadC
         EXPORT OSReadLine
+        EXPORT OSWord
         EXPORT OSWriteC
         EXPORT OSWrite0
         EXPORT OSWriteN
@@ -121,6 +132,12 @@ OSByte
         pop {r3-r9,lr}
         mov pc,lr
 
+OSReadC
+        push {r1-r9,lr}
+        bl COSReadC
+        pop {r1-r9,lr}
+        mov pc,lr
+
 OSReadLine
         push {r4-r9,r12,lr}
         push {r1-r3}
@@ -148,6 +165,35 @@ OSWrite0
 OSWriteN
         push {r0-r9,lr}
         bl COSWriteN
+        pop {r0-r9,lr}
+        mov pc,lr
+
+OSBPut
+        push {r0-r9,lr}
+        bl COSBPut
+        pop {r0-r9,lr}
+        mov pc,lr
+
+OSBGet
+        push {r2-r9,lr}
+        bl COSBGet
+        ldr r1,[r0,#4]
+        ldr r0,[r0]
+        pop {r2-r9,lr}
+        mov pc,lr
+
+OSFile
+        push {r0-r9,lr}
+        bl COSFile
+        pop {r0-r9,lr}
+        mov pc,lr
+
+OSCLI
+        mov pc,lr
+
+OSWord
+        push {r0-r9,lr}
+        bl COSWord
         pop {r0-r9,lr}
         mov pc,lr
 

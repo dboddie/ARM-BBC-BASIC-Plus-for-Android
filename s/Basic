@@ -205,16 +205,21 @@ SAFECRUNCH                      *       15
         IMPORT BASICTransMessage
         IMPORT CGetWorkspace
         IMPORT COSWriteC
+        IMPORT OSBGet
+        IMPORT OSBPut
+        IMPORT OSCLI
         IMPORT OSGetEnv
         IMPORT OSGenerateError
         IMPORT OSExit
         IMPORT OSSynchroniseCodeAreas
+        IMPORT OSFile
         IMPORT OSFind
         IMPORT OSChangeEnvironment
         IMPORT OSWriteS
         IMPORT OSNewLine
         IMPORT OSByte
         IMPORT OSReadLine
+        IMPORT OSWord
         IMPORT OSWriteC
         IMPORT OSWrite0
         IMPORT OSWriteN
@@ -423,7 +428,7 @@ MOVEMEMORY
         ADD     R1,R1,#128
         MOV     R2,#128
         SWI     &DC
-        SWI     WRITE0
+        sys Write0
         OSWriteI ")"
         sys OSNewLine
 ;       MOV     R1,#0
@@ -566,7 +571,7 @@ MAIN
         STMIA   R1,{R0,R2}
         ADD     R2, R1, #8             ;Size of SWICODE area
         MOV     R0, #1
-        SWI     XOSSYNCHRONISECODEAREAS
+        sys OSSynchroniseCodeAreas
  ]
  [ FP=1
         MOV     R0,#&70000
@@ -956,7 +961,7 @@ DOSTAR  MOV     R0,LINE                ;do oscli
         BL      OSCLIREGS
         MOV     R14,#1
         STRB    R14,[ARGP,#MEMM]
-        SWI     CLI
+        sys OSCLI
         MOV     R14,#0
         STRB    R14,[ARGP,#MEMM]
         B       REM
